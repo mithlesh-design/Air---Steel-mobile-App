@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #FFFFFF;
+  --color-bg-base: #0A0A0A;
+  --color-bg-card: #141414;
+  --color-border-subtle: #2A2A2A;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #888888;
+
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Base styles ─────────────────────────────────────────────── */
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Allow text selection in inputs and article text */
+input, textarea, .allow-select {
+  user-select: text;
+}
+
+/* Hide scrollbar globally */
+::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT MODE — "Paper & Ink"
+══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Core CSS tokens ─────────────────────────────────────── */
+html.light {
+  --color-brand-orange:   #C85A00;   /* warm burnt-orange accent */
+  --color-bg-base:        #EFEEEA;   /* warm paper */
+  --color-bg-card:        #FFFFFF;
+  --color-border-subtle:  #E0DFDB;
+  --color-text-primary:   #0F0F0F;
+  --color-text-secondary: #686460;
+}
+
+/* ── 2. Page & shell backgrounds ────────────────────────────── */
+html.light .bg-\[\#0A0A0A\]   { background-color: #EFEEEA !important; }
+html.light .bg-\[\#080808\]   { background-color: #F5F4F0 !important; }
+html.light .bg-\[\#0D0D0D\]   { background-color: #F2F1ED !important; }
+html.light .bg-\[\#141414\]   { background-color: #FFFFFF !important; }
+html.light .bg-\[\#1A1A1A\]   { background-color: #ECEAE6 !important; }
+html.light .bg-\[\#1E1E1E\]   { background-color: #E8E6E2 !important; }
+html.light .bg-\[\#222\]      { background-color: #E4E2DE !important; }
+html.light .bg-\[\#222222\]   { background-color: #E4E2DE !important; }
+html.light .bg-\[\#2A2A2A\]   { background-color: #D9D7D2 !important; }
+html.light .bg-black\/60       { background-color: rgba(0,0,0,0.28) !important; }
+html.light .bg-black\/80       { background-color: rgba(0,0,0,0.38) !important; }
+
+/* ── 3. Card elevation — white cards get a subtle shadow ────── */
+html.light .bg-\[\#141414\].rounded-2xl,
+html.light .bg-\[\#141414\].rounded-3xl {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07) !important;
+}
+
+/* ── 4. Borders ─────────────────────────────────────────────── */
+html.light .border-\[\#2A2A2A\]   { border-color: #D8D5CF !important; }
+html.light .border-\[\#282828\]   { border-color: #D8D5CF !important; }
+html.light .border-\[\#222\]      { border-color: #DEDDDA !important; }
+html.light .border-\[\#222222\]   { border-color: #DEDDDA !important; }
+html.light .border-\[\#1A1A1A\]   { border-color: #E8E6E1 !important; }
+html.light .border-\[\#1E1E1E\]   { border-color: #E3E1DC !important; }
+html.light .border-\[\#333\]      { border-color: #D2CFCA !important; }
+html.light .border-white\/20       { border-color: rgba(0,0,0,0.10) !important; }
+html.light .border-white\/15       { border-color: rgba(0,0,0,0.08) !important; }
+html.light .border-white\/10       { border-color: rgba(0,0,0,0.06) !important; }
+html.light .border-white\/6        { border-color: rgba(0,0,0,0.04) !important; }
+html.light .border-white\/12       { border-color: rgba(0,0,0,0.07) !important; }
+
+/* ── 5. White text → near-black ─────────────────────────────── */
+html.light .text-white           { color: #0F0F0F !important; }
+html.light .text-white\/90       { color: rgba(0,0,0,0.88) !important; }
+html.light .text-white\/80       { color: rgba(0,0,0,0.76) !important; }
+html.light .text-white\/70       { color: rgba(0,0,0,0.66) !important; }
+html.light .text-white\/65       { color: rgba(0,0,0,0.60) !important; }
+html.light .text-white\/60       { color: rgba(0,0,0,0.55) !important; }
+html.light .text-white\/55       { color: rgba(0,0,0,0.50) !important; }
+html.light .text-white\/50       { color: rgba(0,0,0,0.46) !important; }
+html.light .text-white\/45       { color: rgba(0,0,0,0.40) !important; }
+html.light .text-white\/40       { color: rgba(0,0,0,0.36) !important; }
+html.light .text-white\/35       { color: rgba(0,0,0,0.32) !important; }
+html.light .text-white\/30       { color: rgba(0,0,0,0.28) !important; }
+html.light .text-white\/25       { color: rgba(0,0,0,0.24) !important; }
+html.light .text-white\/20       { color: rgba(0,0,0,0.18) !important; }
+html.light .text-white\/10       { color: rgba(0,0,0,0.10) !important; }
+html.light .text-white\/6        { color: rgba(0,0,0,0.06) !important; }
+
+/* ── 6. White bg opacity variants ───────────────────────────── */
+html.light .bg-white\/5          { background-color: rgba(0,0,0,0.03) !important; }
+html.light .bg-white\/6          { background-color: rgba(0,0,0,0.04) !important; }
+html.light .bg-white\/8          { background-color: rgba(0,0,0,0.05) !important; }
+html.light .bg-white\/10         { background-color: rgba(0,0,0,0.06) !important; }
+html.light .bg-white\/12         { background-color: rgba(0,0,0,0.07) !important; }
+
+/* ── 7. brand-orange → actual warm orange ───────────────────── */
+/*    The `--color-brand-orange` token is already overridden in
+      html.light above. These rules handle hardcoded opacity classes. */
+html.light .text-brand-orange    { color: #C85A00 !important; }
+html.light .bg-brand-orange      { background-color: #C85A00 !important; }
+html.light .border-brand-orange  { border-color: #C85A00 !important; }
+html.light .fill-brand-orange    { fill: #C85A00 !important; }
+
+html.light .bg-brand-orange\/10  { background-color: rgba(200,90,0,0.10) !important; }
+html.light .bg-brand-orange\/20  { background-color: rgba(200,90,0,0.18) !important; }
+html.light .border-brand-orange\/20 { border-color: rgba(200,90,0,0.20) !important; }
+html.light .border-brand-orange\/30 { border-color: rgba(200,90,0,0.28) !important; }
+html.light .border-brand-orange\/40 { border-color: rgba(200,90,0,0.36) !important; }
+html.light .text-brand-orange\/60   { color: rgba(200,90,0,0.60) !important; }
+html.light .bg-brand-orange\/60     { background-color: rgba(200,90,0,0.60) !important; }
+html.light .fill-brand-orange\/40   { fill: rgba(200,90,0,0.40) !important; }
+
+/* ── 8. Dividers in light mode ──────────────────────────────── */
+html.light .bg-\[\#1A1A1A\].h-px  { background-color: #E4E2DE !important; }
+html.light .h-px.bg-\[\#1A1A1A\]  { background-color: #E4E2DE !important; }
+
+/* ── 9. Image cards — keep gradient overlays working ────────── */
+/*    Image cards have photos at low opacity — on light bg they
+      appear naturally muted/silver like the reference design.    */
+html.light .bg-gradient-to-t.from-black\/95  { background: linear-gradient(to top, rgba(0,0,0,0.80), transparent) !important; }
+html.light .bg-gradient-to-t.from-black\/90  { background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.10), transparent) !important; }
+html.light .bg-gradient-to-t.from-black\/85  { background: linear-gradient(to top, rgba(0,0,0,0.70), transparent) !important; }
+
+/* ── 10. Active nav button (white bg inverted to dark in light) */
+html.light button.bg-white.text-\[\#0A0A0A\] {
+  background-color: #111111 !important;
+  color: #FFFFFF !important;
+}
+
+/* Menu nav active item */
+html.light .bg-white.text-\[\#0A0A0A\].border-white {
+  background-color: #111111 !important;
+  color: #FFFFFF !important;
+  border-color: #111111 !important;
+}
+html.light .bg-white.border-white {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+}
+/* Scope #0A0A0A text override narrowly — only inside active nav buttons */
+html.light button.bg-white .text-\[\#0A0A0A\],
+html.light button.bg-white.text-\[\#0A0A0A\] { color: #FFFFFF !important; }
+
+/* ── 11. Additional dark bg overrides ───────────────────────── */
+html.light .bg-\[\#0C0C0C\]   { background-color: #F2F1ED !important; }
+
+/* ── 12. FloatingNav pill in light mode ────────────────────── */
+html.light .shadow-\[0_12px_40px_-4px_rgba\(0\,0\,0\,0\.6\)\] {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+
+/* ── 13. Smooth transitions — all colour props ──────────────── */
+html.light *,
+html:not(.light) * {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Don't let colour transitions interfere with Motion animations */
+html.light [data-motion],
+html:not(.light) [data-motion] {
+  transition: none;
+}
+
+/* ── Utility ─────────────────────────────────────────────────── */
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Reader overlay background (used instead of inline style to support light mode) */
+.reader-overlay-bg { background: #0C0C0C; }
+html.light .reader-overlay-bg { background: #F2F1ED !important; }
+
+/* ── 14. Missing shell + pill backgrounds ───────────────────── */
+html.light .bg-\[\#050505\]   { background-color: #D8D6D0 !important; }
+html.light .bg-\[\#0F0F0F\]   { background-color: #FFFFFF !important; }
+
+/* ── 15. bg-[#141414]/50 — semi-transparent placeholder ─────── */
+html.light .bg-\[\#141414\]\/50 { background-color: rgba(255,255,255,0.65) !important; }
+
+/* ── 16. Divide colors (Profile list dividers) ──────────────── */
+html.light .divide-\[\#1E1E1E\] > * + * { border-color: #E3E1DC !important; }
+html.light .divide-\[\#1A1A1A\] > * + * { border-color: #E8E6E1 !important; }
+html.light .divide-\[\#2A2A2A\] > * + * { border-color: #D8D5CF !important; }
+
+/* ── 17. Menu backdrop — lighter scrim in light mode ────────── */
+html.light .bg-black\/70       { background-color: rgba(0,0,0,0.45) !important; }
+
+/* ── 18. Reader utility classes (replaces inline styles) ─────── */
+.reader-pill-bg                { background: #0F0F0F; }
+html.light .reader-pill-bg    { background: #FFFFFF !important; }
+
+.reader-img-bg                 { background: #0A0A0A; }
+html.light .reader-img-bg     { background: #E8E6E2 !important; }
+
+/* ── 19. Missing opacity variants ───────────────────────────── */
+html.light .bg-white\/4          { background-color: rgba(0,0,0,0.025) !important; }
+html.light .border-white\/8      { border-color: rgba(0,0,0,0.05)  !important; }
+html.light .border-white\/22     { border-color: rgba(0,0,0,0.13)  !important; }
+html.light .bg-\[\#141414\]\/40 { background-color: rgba(255,255,255,0.55) !important; }

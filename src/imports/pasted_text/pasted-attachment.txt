@@ -1,0 +1,239 @@
+## 2. Design Tokens
+
+### 2.1 Color System
+
+#### Semantic CSS Variables (Theme-Driven)
+
+```yaml
+# Light Mode — "Paper & Ink"
+light:
+  bg-primary:     "#F0F0F0"    # Page background
+  bg-secondary:   "#FFFFFF"    # Card surfaces
+  bg-tertiary:    "#E5E5E5"    # Inputs, deep elements
+  text-primary:   "#111111"    # Headings, primary body
+  text-secondary: "#555555"    # Captions, metadata
+  text-inverse:   "#FFFFFF"    # Text on dark fills
+  border-color:   "#E0E0E0"    # Card edges
+  border-subtle:  "#EBEBEB"    # Input borders at rest
+
+# Dark Mode — "Air & Steel" (Default)
+dark:
+  bg-primary:     "#161616"    # Deep charcoal base
+  bg-secondary:   "#222222"    # Elevated card surfaces
+  bg-tertiary:    "#2C2C2C"    # Inputs, recessed areas
+  text-primary:   "#F2F2F2"    # High-contrast headings
+  text-secondary: "#9CA3AF"    # Muted captions (neutral-400)
+  text-inverse:   "#000000"    # Text on light fills
+  border-color:   "#333333"    # Subtle card edges
+  border-subtle:  "#262626"    # Near-invisible input borders
+```
+
+#### Neutral Palette (Hardcoded)
+
+```yaml
+neutral:
+  50:  "#F9FAFB"
+  100: "#F3F4F6"
+  200: "#E5E7EB"
+  300: "#D1D5DB"
+  400: "#9CA3AF"
+  500: "#6B7280"
+  600: "#4B5563"
+  700: "#374151"
+  800: "#1F2937"
+  850: "#1f1f1f"
+  900: "#171717"
+  925: "#0a0a0a"
+  950: "#050505"
+```
+
+#### Accent Color
+
+```yaml
+accent:
+  primary: "amber-700"     # Warm amber for CTAs, categories, active states
+  highlight: "amber-600"   # Hover emphasis
+  glow: "amber-500"        # Badges, price highlights
+  subtle: "amber-900/10"   # Background tints for selected states
+  error: "red-400"         # Destructive actions (Sign Out hover)
+  success: "green-500"     # Payment confirmation
+```
+
+### 2.2 Typography
+
+```yaml
+fonts:
+  display: '"Space Grotesk", sans-serif'   # Headings, brand, navigation labels
+  body:    '"Inter", sans-serif'           # Body text, descriptions, reader content
+
+weights:
+  light:    300
+  regular:  400
+  medium:   500
+  semibold: 600
+  bold:     700
+
+type_scale:
+  # Headlines
+  hero:        "text-4xl md:text-6xl lg:text-7xl"   # Cover story titles
+  page-title:  "text-3xl md:text-5xl"                # Page headers (Home, Archives)
+  section:     "text-xl md:text-2xl"                 # Section headers
+  card-title:  "text-lg md:text-xl"                  # Card headings
+  # Body
+  body-lg:     "text-sm md:text-base"                # Primary descriptions
+  body:        "text-xs md:text-sm"                  # Card subtitles, modal text
+  # System
+  label:       "text-[10px]"                         # Section labels, metadata
+  micro:       "text-[9px]"                          # Badges, timestamps, tertiary info
+
+letter_spacing:
+  tight:    "tracking-tighter"    # Hero headlines
+  standard: "tracking-wide"      # Body text
+  wide:     "tracking-widest"     # Uppercase labels (0.1em)
+  ultra:    "tracking-[0.2em]"    # Section headers, brand
+  max:      "tracking-[0.3em]"   # Featured metadata
+
+text_transform: "uppercase"  # Applied globally to all headings, labels, navigation
+```
+
+### 2.3 Spacing & Layout
+
+```yaml
+layout:
+  page-padding:    "px-5"
+  content-max:     "max-w-md md:max-w-3xl lg:max-w-5xl"
+  content-center:  "mx-auto"
+  page-top:        "pt-24"      # Below fixed header
+  page-bottom:     "pb-32"      # Above floating menu
+  section-gap:     "mb-12 to mb-20"
+  card-gap:        "gap-4 md:gap-6"
+
+border-radius:
+  card:    "rounded-3xl"         # 1.5rem — all cards, inputs
+  button:  "rounded-full"        # Pill buttons
+  modal:   "rounded-3xl"         # Command center
+  image:   "rounded-3xl"         # Image containers
+  preview: "rounded-sm"          # Preview modal (sharp contrast)
+  input:   "rounded-2xl"         # Form fields
+  tag:     "rounded-full"        # Badges, pills
+```
+
+### 2.4 Shadows & Depth
+
+```yaml
+shadows:
+  card:        "shadow-lg"
+  card-hover:  "shadow-2xl"
+  modal:       "shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)]"   # Light
+  modal-dark:  "shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]"   # Dark
+  floating:    "shadow-xl"        # Floating menu button
+  glow-amber:  "shadow-[0_0_20px_rgba(146,64,14,0.3)]"        # Purchase CTA
+  glow-select: "shadow-[0_0_30px_rgba(217,119,6,0.08)]"       # Selected edition
+
+elevation_strategy: |
+  Depth is communicated through subtle brightness shifts rather than heavy shadows.
+  Cards use `brightness-90` at rest → `brightness-100` on hover.
+  Dark mode relies on border contrast (#333 on #161616) over shadow.
+```
+
+### 2.5 Animation System
+
+```yaml
+timing_function:
+  luxury: "cubic-bezier(0.22, 1, 0.36, 1)"    # Primary easing — dampened overshoot
+
+keyframe_animations:
+  fade-in:
+    duration: "1.2s"
+    easing: luxury
+    from: { opacity: 0 }
+    to:   { opacity: 1 }
+
+  slide-up:
+    duration: "1.0s"
+    easing: luxury
+    from: { translateY: "40px", opacity: 0 }
+    to:   { translateY: "0", opacity: 1 }
+
+  blur-in:
+    duration: "0.8s"
+    easing: luxury
+    from: { opacity: 0, blur: "10px", scale: 0.99 }
+    to:   { opacity: 1, blur: "0", scale: 1 }
+
+interaction_transitions:
+  default:  "transition-all duration-300"
+  slow:     "transition-all duration-500"
+  glacial:  "transition-all duration-700"
+  theme:    "transition-colors duration-500"      # Theme switch
+  press:    "active:scale-95"                     # Tap feedback
+  press-sm: "active:scale-[0.98]"                # Large card tap
+  hover-lift: "hover:-translate-y-1"             # Card hover
+  hover-lift-lg: "hover:-translate-y-2"          # Issue card hover
+  hover-scale: "hover:scale-105"                 # Image zoom
+  hover-slide: "hover:translate-x-1"             # Bookmark items
+```
+
+---
+
+## 3. Component Library
+
+### 3.1 Buttons
+
+| Variant | Style | Use Case |
+|---|---|---|
+| `primary` | Solid fill (`bg-text-primary text-bg-primary`), pill shape, shadow | Main CTAs |
+| `outline` | Transparent with border, pill shape | Secondary actions |
+| `text` | No background, underline on hover, trailing arrow icon | Inline navigation links |
+| `ghost` | Transparent, border on hover | Tertiary actions |
+
+All buttons: `px-6 py-4`, `text-xs font-bold`, `tracking-[0.15em] uppercase`, `rounded-full`, `active:scale-95`.
+
+### 3.2 Inputs
+
+- **Style**: Floating label pattern inside a `rounded-2xl` card container
+- **Container**: `bg-bg-secondary`, `border border-border-subtle`, `px-5 pt-6 pb-3`
+- **Focus**: Border transitions to `border-text-primary`
+- **Label**: Animates from placeholder position to top-left on focus (`text-[10px] uppercase tracking-[0.2em]`)
+
+### 3.3 Cards
+
+#### ArticleCard
+- Full-width, vertical layout: image → metadata → title → subtitle
+- Image: `rounded-3xl`, hover scales 105%, container lifts `-translate-y-1`
+- Category label: `text-amber-700 text-[10px] tracking-[0.2em]`
+- Title: `font-sans font-medium uppercase`, transitions from `text-secondary` → `text-primary` on hover
+
+#### IssueCard
+- Fixed-width horizontal scroll items (`w-64 md:w-80` large, `w-40` small)
+- Cover image: `aspect-[3/4]`, `rounded-3xl`
+- Hover: lifts `-translate-y-2`, shadow upgrades to `2xl`
+- Volume label transitions to `amber-700` on hover
+
+### 3.4 PreviewModal
+- Portal-rendered, centered overlay
+- **Backdrop**: `bg-black/60 dark:bg-black/90 backdrop-blur-sm`
+- **Layout**: Stacked on mobile (image top, content bottom) → side-by-side on tablet (`md:flex-row`)
+- **Image section**: Swipeable carousel with touch gesture support, `ChevronLeft`/`ChevronRight` navigation
+- **Content section**: Type badge (`amber-700`), title, description, optional synopsis ("Briefing" section)
+- **CTA**: Full-width — amber glow for purchase (`bg-amber-800`), outline for owned content
+
+### 3.5 Command Menu (Navigation Hub)
+- Centered modal with `rounded-3xl`, `backdrop-blur-md` backdrop
+- **Search bar**: `rounded-xl`, with `Search` icon, auto-focus on open
+- **Navigation grid**: 2×2 grid of pill-shaped nav buttons, active state inverts colors
+- **Quick access**: Resume reading + Saved articles shortcuts
+- **Footer**: Sign Out, Support, Legal links
+- Entry animation: `translate-y-8 opacity-0 scale-95` → `translate-y-0 opacity-100 scale-100`
+
+### 3.6 Theme Toggle
+- Custom SVG icons: "High Beam" (headlight with beams) for dark → light, "Headlight Off" (housing only) for light → dark
+- Automotive metaphor: toggling headlights on/off
+- `active:scale-95` tap feedback
+
+### 3.7 PlaceholderImage
+- Diagonal stripe pattern overlay (45° hatching at 10% opacity)
+- Gradient overlay: `from-black/40 via-transparent to-black/10` (light) / `from-black/80 to-black/20` (dark)
+- Centered rotated text label ("IMG", "COVER") at 50% opacity
+
+---
