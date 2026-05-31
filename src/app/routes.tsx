@@ -8,8 +8,12 @@ import { Cockpit } from "./screens/Cockpit";
 import { Profile } from "./screens/Profile";
 import { Reader } from "./screens/Reader";
 import { Cart } from "./screens/Cart";
+import { PdfReader } from "./screens/PdfReader";
+import { Bookmarks } from "./screens/Bookmarks";
+import { Articles } from "./screens/Articles";
 import { MenuProvider } from "./context/MenuContext";
 import { ReaderProvider } from "./context/ReaderContext";
+import { CartProvider } from "./context/CartContext";
 import { MobileWrapper } from "./components/layout/MobileWrapper";
 import { MenuOverlay } from "./components/layout/MenuOverlay";
 import { ReaderOverlay } from "./components/layout/ReaderOverlay";
@@ -27,6 +31,7 @@ function AnimatedOutlet() {
 
 function RootLayout() {
   return (
+    <CartProvider>
     <MenuProvider>
       <ReaderProvider>
         <MobileWrapper>
@@ -40,6 +45,7 @@ function RootLayout() {
         </MobileWrapper>
       </ReaderProvider>
     </MenuProvider>
+    </CartProvider>
   );
 }
 
@@ -57,7 +63,10 @@ export const router = createBrowserRouter([
       { path: "library", Component: Cockpit }, // legacy redirect
       { path: "profile", Component: Profile },
       { path: "reader", Component: Reader },
+      { path: "pdf-reader", Component: PdfReader },
       { path: "cart", Component: Cart },
+      { path: "bookmarks", Component: Bookmarks },
+      { path: "articles", Component: Articles },
     ],
   },
 ]);

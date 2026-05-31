@@ -3,7 +3,7 @@ import { useMenu } from "../../context/MenuContext";
 import { useTheme } from "../../context/ThemeContext";
 import { motion, AnimatePresence } from "motion/react";
 
-const HIDDEN_PATHS = ["/", "/login", "/signup", "/reader"];
+const HIDDEN_PATHS = ["/", "/login", "/signup", "/reader", "/pdf-reader"];
 
 export function FloatingNav() {
   const location = useLocation();

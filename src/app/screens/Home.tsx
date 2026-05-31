@@ -114,7 +114,7 @@ export function Home() {
             style={{ aspectRatio: "3/4" }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={() => openReader("featured")}
+            onClick={() => openReader("volume")}
           >
             <img
               src={LATEST_ISSUE_IMAGE}
@@ -142,7 +142,9 @@ export function Home() {
               className="text-[11px] text-white/45 leading-[1.65] mb-4"
               style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300 }}
             >
-              100 pages of innovative storytelling, curated from renowned as well as sometimes peripheral pioneers of automotive culture. From the culture of Homo sapiens to the never-directed depths of Tokyo's underscore. Substance is weight, permanence is space, and unified ends story.
+              The Inaugural Dispatch. 150+ pages of immersive storytelling, curated from renowned as well as overlooked peripheries of automotive culture. From the solitude of Alpine passes to the neon-drenched depths of Tokyo's underpasses.
+              <br /><br />
+              Substantial in weight, permanent in nature, and crafted with intent.
             </p>
           </motion.div>
         </motion.div>
@@ -165,7 +167,7 @@ export function Home() {
               Featured Articles
             </h2>
             <motion.button
-              onClick={() => navigate("/archives")}
+              onClick={() => navigate("/articles")}
               whileTap={{ scale: 0.93 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
               className="flex items-center gap-1 text-[9px] text-brand-orange uppercase tracking-[0.22em]"
@@ -180,10 +182,10 @@ export function Home() {
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
           >
             {[
-              { city: "Tokyo", title: "Night Runners", img: NIGHT_RUNNERS_IMAGE },
-              { city: "Los Angeles", title: "Analogue", img: ANALOGUE_IMAGE },
-              { city: "Geneva", title: "The Silent Mile", img: VOL04_IMAGE },
-              { city: "London", title: "Carbon Ritual", img: VOL03_IMAGE },
+              { city: "Tokyo", title: "Night Runners", img: NIGHT_RUNNERS_IMAGE, id: "night-runners" },
+              { city: "Los Angeles", title: "Analogue", img: ANALOGUE_IMAGE, id: "analogue" },
+              { city: "Geneva", title: "The Silent Mile", img: VOL04_IMAGE, id: "the-silent-mile" },
+              { city: "London", title: "Carbon Ritual", img: VOL03_IMAGE, id: "carbon-ritual" },
             ].map((card) => (
               <motion.div
                 key={card.title}
@@ -192,24 +194,24 @@ export function Home() {
                 style={{ aspectRatio: "4/3" }}
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                onClick={() => openReader("featured")}
+                onClick={() => openReader(card.id)}
               >
                 <img
                   src={card.img}
                   alt={card.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-55"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <div
-                    className="text-[8px] text-white/35 uppercase tracking-[0.22em] mb-1"
-                    style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }}
+                    className="text-[8px] uppercase tracking-[0.22em] mb-1"
+                    style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, color: "rgba(255,255,255,0.45)" }}
                   >
                     {card.city}
                   </div>
                   <div
-                    className="text-[13px] text-white uppercase leading-tight tracking-[0.01em]"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
+                    className="text-[13px] uppercase leading-tight tracking-[0.01em]"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#ffffff" }}
                   >
                     {card.title}
                   </div>
@@ -254,7 +256,7 @@ export function Home() {
             style={{ aspectRatio: "3/4" }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={() => openReader("featured")}
+            onClick={() => openReader("volume")}
           >
             <img
               src={LATEST_ISSUE_IMAGE}

@@ -3,7 +3,7 @@ import { X, Search, LogOut, Home, Archive, LayoutDashboard, User, ArrowRight, Bo
 import { useMenu } from "../../context/MenuContext";
 import { useReader } from "../../context/ReaderContext";
 import { useNavigate, useLocation } from "react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 const navItems = [
   { label: "Home", path: "/home", icon: Home },
@@ -21,16 +21,16 @@ type SearchResult = {
 };
 
 const SEARCHABLE: SearchResult[] = [
-  { id: "v10", label: "Genesis", sublabel: "Vol 1.0", type: "volume", path: "/archives" },
-  { id: "v04", label: "Silence", sublabel: "Vol 04", type: "volume", path: "/archives" },
-  { id: "v03", label: "Neon", sublabel: "Vol 03", type: "volume", path: "/archives" },
-  { id: "v02", label: "Static", sublabel: "Vol 02", type: "volume", path: "/archives" },
-  { id: "v01", label: "Origin", sublabel: "Vol 01", type: "volume", path: "/archives" },
-  { id: "a1", label: "Night Runners", sublabel: "Article · Tokyo", type: "article", path: "/archives" },
-  { id: "a2", label: "Analogue", sublabel: "Article · Los Angeles", type: "article", path: "/archives" },
-  { id: "a3", label: "The Silent Mile", sublabel: "Article · Geneva", type: "article", path: "/archives" },
-  { id: "a4", label: "Carbon Ritual", sublabel: "Article · London", type: "article", path: "/archives" },
-  { id: "a5", label: "The Architecture of Silence", sublabel: "Article · Cover Story", type: "article", path: "/archives" },
+  { id: "1.0", label: "Genesis", sublabel: "Vol 1.0", type: "volume", path: "/archives" },
+  { id: "04",  label: "Silence", sublabel: "Vol 04", type: "volume", path: "/archives" },
+  { id: "03",  label: "Neon",    sublabel: "Vol 03", type: "volume", path: "/archives" },
+  { id: "02",  label: "Static",  sublabel: "Vol 02", type: "volume", path: "/archives" },
+  { id: "01",  label: "Origin",  sublabel: "Vol 01", type: "volume", path: "/archives" },
+  { id: "night-runners",           label: "Night Runners",              sublabel: "Article · Tokyo",      type: "article", path: "/archives" },
+  { id: "analogue",                label: "Analogue",                   sublabel: "Article · Los Angeles", type: "article", path: "/archives" },
+  { id: "the-silent-mile",         label: "The Silent Mile",            sublabel: "Article · Geneva",     type: "article", path: "/archives" },
+  { id: "carbon-ritual",           label: "Carbon Ritual",              sublabel: "Article · London",     type: "article", path: "/archives" },
+  { id: "architecture-of-silence", label: "The Architecture of Silence",sublabel: "Article · Cover Story",type: "article", path: "/archives" },
 ];
 
 export function MenuOverlay() {
@@ -39,6 +39,10 @@ export function MenuOverlay() {
   const navigate = useNavigate();
   const location = useLocation();
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!isMenuOpen) setSearch("");
+  }, [isMenuOpen]);
 
   const results = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -54,6 +58,16 @@ export function MenuOverlay() {
     closeMenu();
     setSearch("");
     navigate(path);
+  };
+
+  const handleSearchResult = (item: SearchResult) => {
+    closeMenu();
+    setSearch("");
+    if (item.type === "article") {
+      openReader(item.id);
+    } else {
+      navigate("/archives", { state: { highlight: item.id } });
+    }
   };
 
   return (
@@ -138,7 +152,7 @@ export function MenuOverlay() {
                       {results.map((item) => (
                         <motion.button
                           key={item.id}
-                          onClick={() => handleNav(item.path)}
+                          onClick={() => handleSearchResult(item)}
                           whileTap={{ scale: 0.97 }}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                           className="w-full flex items-center gap-3 px-3.5 py-3 bg-[#141414] border-2 border-[#222] rounded-2xl text-left"
@@ -229,7 +243,7 @@ export function MenuOverlay() {
                     <div className="grid grid-cols-2 gap-2">
                       {/* Bookmarks */}
                       <motion.button
-                        onClick={() => handleNav("/cockpit")}
+                        onClick={() => { closeMenu(); setSearch(""); navigate("/cockpit", { state: { scrollTo: "bookmarks" } }); }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         className="bg-[#141414] border-2 border-[#222] p-4 rounded-2xl text-left flex flex-col gap-2"

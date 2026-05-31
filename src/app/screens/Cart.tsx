@@ -1,40 +1,8 @@
-import { useState } from "react";
 import { motion } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
 import { ShoppingBag, Trash2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router";
-import GENESIS_IMAGE from "../../imports/image-2.png";
-
-const VOL02_IMAGE =
-  "https://images.unsplash.com/photo-1772877357487-ca7dc84cc04e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwYXJjaGl0ZWN0dXJhbCUyMG1vZGVybmlzdCUyMGJ1aWxkaW5nJTIwZmFjYWRlfGVufDF8fHx8MTc3ODA3MjAwNnww&ixlib=rb-4.1.0&q=80&w=1080";
-
-type CartItem = {
-  id: string;
-  title: string;
-  vol: string;
-  format: string;
-  price: number;
-  img: string;
-};
-
-const INITIAL_CART: CartItem[] = [
-  {
-    id: "vol-1",
-    title: "Genesis",
-    vol: "Vol 1.0",
-    format: "Print & Digital",
-    price: 4500,
-    img: GENESIS_IMAGE,
-  },
-  {
-    id: "vol-02",
-    title: "Static",
-    vol: "Vol 02",
-    format: "Digital",
-    price: 1200,
-    img: VOL02_IMAGE,
-  },
-];
+import { useCart } from "../context/CartContext";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -55,11 +23,7 @@ const itemVariants = {
 
 export function Cart() {
   const navigate = useNavigate();
-  const [items, setItems] = useState<CartItem[]>(INITIAL_CART);
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  const { cartItems: items, removeFromCart: removeItem } = useCart();
 
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
 
@@ -71,7 +35,7 @@ export function Cart() {
       transition={{ duration: 0.5 }}
       className="flex-1 flex flex-col min-h-0"
     >
-      <TopBar />
+      <TopBar showBack />
 
       <main
         className="flex-1 overflow-y-auto pb-32"

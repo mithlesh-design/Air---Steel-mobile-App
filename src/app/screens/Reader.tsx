@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Bookmark, Maximize2, Minimize2, AlignJustify, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -73,6 +73,46 @@ export function Reader() {
     }
   }, [pageIndex]);
 
+  const SPEED_SWIPE_VELOCITY = 0.4;
+  const touchStartX = useRef(0);
+  const touchStartTime = useRef(0);
+  const speedSwipeActive = useRef(false);
+
+  const triggerSpeedSwipe = useCallback((dir: number) => {
+    const delays = [120, 120, 180, 260, 380];
+    let current = pageIndex;
+    delays.forEach((delay, i) => {
+      const accumulated = delays.slice(0, i).reduce((a, b) => a + b, 0);
+      setTimeout(() => {
+        current = Math.max(0, Math.min(MAGAZINE_PAGES.length - 1, current + dir));
+        setDirection(dir);
+        setPageIndex(current);
+        if (i === delays.length - 1) speedSwipeActive.current = false;
+      }, accumulated + delay);
+    });
+  }, [pageIndex]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+    speedSwipeActive.current = false;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaT = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(deltaX) / deltaT;
+    if (Math.abs(deltaX) < 15) return;
+    e.preventDefault(); // suppress synthetic click on tap-zone buttons
+    const dir = deltaX < 0 ? 1 : -1;
+    if (velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
+      speedSwipeActive.current = true;
+      triggerSpeedSwipe(dir);
+    } else {
+      dir === 1 ? goNext() : goPrev();
+    }
+  };
+
   const pageVariants = {
     enter: (dir: number) => ({
       opacity: 0,
@@ -136,7 +176,12 @@ export function Reader() {
 
       {/* ── MAGAZINE MOCKUP ── */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-6 relative z-10 min-h-0">
-        <div className="relative w-full" style={{ maxWidth: 320 }}>
+        <div
+          className="relative w-full"
+          style={{ maxWidth: 320, touchAction: "none" }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={pageIndex}

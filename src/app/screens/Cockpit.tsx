@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
-import { ArrowRight, Bookmark, LayoutDashboard } from "lucide-react";
-import { useNavigate } from "react-router";
+import { ArrowRight, Bookmark, LayoutDashboard, ChevronDown } from "lucide-react";
+import { useNavigate, useLocation } from "react-router";
 import { useReader } from "../context/ReaderContext";
 
 const VOL04_IMAGE =
@@ -50,9 +50,9 @@ function getStoredReadingTime(): string {
     const secs = parseInt(localStorage.getItem("air-steel-reading-time") || "9240", 10);
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
-    return `${String(h).padStart(3, "0")}h ${String(m).padStart(2, "0")}m`;
+    return `${h}h ${String(m).padStart(2, "0")}m`;
   } catch {
-    return "002h 34m";
+    return "2h 34m";
   }
 }
 
@@ -86,20 +86,48 @@ const COLLECTION_SLOTS = [
 ];
 
 export function Cockpit() {
-  const navigate = useNavigate();
   const { openReader } = useReader();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeVolIdx, setActiveVolIdx] = useState(0);
   const [readingTime] = useState(getStoredReadingTime);
+  const bookmarksRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Rotate Box A every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveVolIdx((i) => (i + 1) % OWNED_VOLUMES.length);
-    }, 10000);
-    return () => clearInterval(interval);
+  const advanceVol = useCallback(() => {
+    setActiveVolIdx((i) => (i + 1) % OWNED_VOLUMES.length);
   }, []);
 
+  // Start / restart the 10-second auto-rotate
+  const resetInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(advanceVol, 10000);
+  }, [advanceVol]);
+
+  // Boot the auto-rotate on mount
+  useEffect(() => {
+    resetInterval();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [resetInterval]);
+
+  // Tap handler: advance immediately + reset 10s timer
+  const handleBoxATap = useCallback(() => {
+    advanceVol();
+    resetInterval();
+  }, [advanceVol, resetInterval]);
+
+  // Scroll to bookmarks when navigated with scrollTo state
+  useEffect(() => {
+    if ((location.state as { scrollTo?: string } | null)?.scrollTo === "bookmarks") {
+      const t = setTimeout(() => {
+        bookmarksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [location.state]);
+
   const isCollectionComplete = DIGITAL_OWNED === DIGITAL_TOTAL;
+  const [isCollectionOpen, setIsCollectionOpen] = useState(true);
 
   return (
     <motion.div
@@ -109,7 +137,7 @@ export function Cockpit() {
       transition={{ duration: 0.5 }}
       className="flex-1 flex flex-col min-h-0"
     >
-      <TopBar />
+      <TopBar showBack />
 
       <main
         className="flex-1 overflow-y-auto pb-32"
@@ -159,9 +187,14 @@ export function Cockpit() {
             <div className="flex items-center mb-4">
               <span className="text-[9px] text-white/40 uppercase tracking-widest">Reading Activity</span>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3">
               {/* Box A — rotating volume completion */}
-              <div className="text-center">
+              <motion.div
+                className="flex flex-col items-center justify-center border-r border-white/[0.07] pr-2 cursor-pointer select-none"
+                onClick={handleBoxATap}
+                whileTap={{ scale: 0.92, opacity: 0.75 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeVolIdx}
@@ -169,37 +202,45 @@ export function Cockpit() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex flex-col items-center w-full"
                   >
-                    <div className="text-[20px] font-bold text-white tracking-tight mb-0.5">
+                    <div
+                      className="text-[20px] font-bold text-white leading-none mb-2 text-center"
+                      style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+                    >
                       {OWNED_VOLUMES[activeVolIdx].pct}%
                     </div>
-                    <div className="text-[7px] text-white/30 uppercase tracking-widest">
+                    <div className="text-[7px] text-white/30 uppercase tracking-widest text-center">
                       {OWNED_VOLUMES[activeVolIdx].label}
                     </div>
                   </motion.div>
                 </AnimatePresence>
-              </div>
+              </motion.div>
 
               {/* Box B — total reading time */}
-              <div className="text-center">
-                <div className="text-[16px] font-bold text-white tracking-tight mb-0.5 leading-tight">
+              <div className="flex flex-col items-center justify-center border-r border-white/[0.07]">
+                <div
+                  className="text-[20px] font-bold text-white leading-none mb-2 text-center"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+                >
                   {readingTime}
                 </div>
-                <div className="text-[7px] text-white/30 uppercase tracking-widest">
+                <div className="text-[7px] text-white/30 uppercase tracking-widest text-center">
                   Read
                 </div>
               </div>
 
               {/* Box C — digital collection x/y */}
-              <div className="text-center">
+              <div className="flex flex-col items-center justify-center pl-2">
                 <div
-                  className={`text-[20px] font-bold tracking-tight mb-0.5 ${
+                  className={`text-[20px] font-bold leading-none mb-2 text-center ${
                     isCollectionComplete ? "text-[#C9A84C]" : "text-white"
                   }`}
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
                 >
                   {DIGITAL_OWNED}/{DIGITAL_TOTAL}
                 </div>
-                <div className="text-[7px] text-white/30 uppercase tracking-widest">
+                <div className="text-[7px] text-white/30 uppercase tracking-widest text-center">
                   Digital
                 </div>
               </div>
@@ -241,7 +282,7 @@ export function Cockpit() {
                 className="min-w-[185px] space-y-3 shrink-0 cursor-pointer"
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                onClick={() => navigate("/reader")}
+                onClick={() => navigate(item.label === "Vol 1.0" ? "/pdf-reader" : "/reader")}
               >
                 <div
                   className="rounded-2xl border-2 border-[#2A2A2A] bg-[#141414] relative overflow-hidden"
@@ -250,13 +291,16 @@ export function Cockpit() {
                   <img
                     src={item.img}
                     alt={item.label}
-                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
 
                   {/* Bottom info */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="text-[7px] text-white/40 uppercase tracking-widest mb-0.5">
+                    <div
+                      className="text-[7px] uppercase tracking-widest mb-0.5"
+                      style={{ color: "rgba(255,255,255,0.45)" }}
+                    >
                       {item.label}
                     </div>
                     {/* Progress bar */}
@@ -266,7 +310,10 @@ export function Cockpit() {
                         style={{ width: `${item.pct}%` }}
                       />
                     </div>
-                    <div className="text-[6px] text-white/30 uppercase tracking-widest mt-1.5">
+                    <div
+                      className="text-[6px] uppercase tracking-widest mt-1.5"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
                       {item.pct}% read
                     </div>
                   </div>
@@ -297,6 +344,7 @@ export function Cockpit() {
 
         {/* Bookmarks */}
         <motion.div
+          ref={bookmarksRef}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -369,7 +417,7 @@ export function Cockpit() {
 
           <motion.div variants={itemVariants} className="mt-3">
             <motion.button
-              onClick={() => navigate("/cockpit")}
+              onClick={() => navigate("/bookmarks")}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
               className="w-full text-[9px] uppercase tracking-widest border border-[#2A2A2A] rounded-full py-3 text-white/40 flex items-center justify-center gap-2"
@@ -386,67 +434,96 @@ export function Cockpit() {
           animate="visible"
           className="px-6 mb-8"
         >
-          <motion.div variants={itemVariants} className="mb-5 flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
-            <span
-              className="text-[11px] text-white uppercase tracking-widest"
-              style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
-            >
-              Collection
-            </span>
-          </motion.div>
-
+          {/* Collapsible header */}
           <motion.div variants={itemVariants}>
-            <div
-              className="text-[8px] text-white/25 uppercase tracking-[0.22em] mb-3"
-              style={{ fontFamily: "'Inter', sans-serif" }}
+            <motion.button
+              onClick={() => setIsCollectionOpen((o) => !o)}
+              whileTap={{ opacity: 0.7 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className="w-full flex items-center justify-between mb-5"
             >
-              Generation 1 &nbsp;·&nbsp; Vol 1.0 – 1.5
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {COLLECTION_SLOTS.map((slot, i) => (
-                <div
-                  key={i}
-                  className={`rounded-2xl border overflow-hidden relative cursor-pointer ${
-                    slot.owned
-                      ? "border-[#2A2A2A] bg-[#141414]"
-                      : "border-dashed border-[#222] bg-[#141414]/40"
-                  }`}
-                  style={{ aspectRatio: "3/4" }}
-                  onClick={() => slot.owned ? navigate("/reader") : undefined}
+              <div className="flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                <span
+                  className="text-[11px] text-white uppercase tracking-widest"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
                 >
-                  {slot.img ? (
-                    <>
-                      <img
-                        src={slot.img}
-                        alt={slot.title}
-                        className={`absolute inset-0 w-full h-full object-cover ${
-                          slot.owned ? "opacity-70" : "opacity-20"
-                        }`}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <div className="text-[7px] text-white/40 uppercase tracking-widest mb-0.5">
-                          Vol {slot.num}
-                        </div>
-                        <div
-                          className="text-[10px] text-white uppercase leading-tight"
-                          style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
-                        >
-                          {slot.title}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white/10 text-xl">—</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  Collection
+                </span>
+              </div>
+              <motion.div
+                animate={{ rotate: isCollectionOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              >
+                <ChevronDown size={12} className="text-white/30" />
+              </motion.div>
+            </motion.button>
           </motion.div>
+
+          {/* Collapsible body */}
+          <AnimatePresence initial={false}>
+            {isCollectionOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="text-[8px] text-white/25 uppercase tracking-[0.22em] mb-3"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
+                  Generation 1
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pb-1">
+                  {COLLECTION_SLOTS.map((slot, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-2xl border overflow-hidden relative cursor-pointer ${
+                        slot.owned
+                          ? "border-[#2A2A2A] bg-[#141414]"
+                          : "border-dashed border-[#222] bg-[#141414]/40"
+                      }`}
+                      style={{ aspectRatio: "3/4" }}
+                      onClick={() => slot.owned ? navigate(slot.num === "1.0" ? "/pdf-reader" : "/reader") : undefined}
+                    >
+                      {slot.img ? (
+                        <>
+                          <img
+                            src={slot.img}
+                            alt={slot.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ opacity: slot.owned ? 1 : 0.35 }}
+                          />
+                          <div className={`absolute inset-0 bg-gradient-to-t ${slot.owned ? "from-black/70 to-transparent" : "from-black/80 via-black/40 to-black/20"}`} />
+                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <div
+                              className="text-[7px] uppercase tracking-widest mb-0.5"
+                              style={{ color: "rgba(255,255,255,0.45)" }}
+                            >
+                              Vol {slot.num}
+                            </div>
+                            <div
+                              className="text-[10px] uppercase leading-tight"
+                              style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#ffffff" }}
+                            >
+                              {slot.title}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-white/10 text-xl">—</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </main>
     </motion.div>

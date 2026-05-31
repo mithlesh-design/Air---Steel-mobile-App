@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
-import { ChevronDown, ShoppingBag } from "lucide-react";
+import { ChevronDown, ShoppingCart, Eye } from "lucide-react";
 import { useReader } from "../context/ReaderContext";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import GENESIS_IMAGE from "../../imports/image-2.png";
 
 const VOL04_IMAGE =
@@ -37,7 +37,7 @@ const GENERATIONS: Generation[] = [
   {
     id: "gen1",
     label: "Generation 1",
-    subtitle: "Vol 1.0 – 1.5",
+    subtitle: "",
     volumes: [
       { num: "1.0", title: "Genesis", status: "Digital & Print", owned: true, img: GENESIS_IMAGE },
       { num: "04", title: "Silence", status: "Digital & Print", owned: true, img: VOL04_IMAGE },
@@ -68,7 +68,24 @@ const itemVariants = {
 export function Archives() {
   const { openReader } = useReader();
   const navigate = useNavigate();
+  const location = useLocation();
   const [openGenerations, setOpenGenerations] = useState<Set<string>>(new Set(["gen1"]));
+  const [highlightedVol, setHighlightedVol] = useState<string | null>(null);
+  const volRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    const target = (location.state as { highlight?: string } | null)?.highlight;
+    if (!target) return;
+    // Ensure the generation containing this volume is expanded
+    setOpenGenerations((prev) => new Set([...prev, "gen1"]));
+    // Short delay so the accordion animation settles before scrolling
+    const t1 = setTimeout(() => {
+      volRefs.current[target]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedVol(target);
+    }, 350);
+    const t2 = setTimeout(() => setHighlightedVol(null), 2500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [location.state]);
 
   const toggleGeneration = (id: string) => {
     setOpenGenerations((prev) => {
@@ -90,7 +107,7 @@ export function Archives() {
       transition={{ duration: 0.5 }}
       className="flex-1 flex flex-col min-h-0"
     >
-      <TopBar />
+      <TopBar showBack />
 
       <main
         className="flex-1 overflow-y-auto pb-32"
@@ -101,15 +118,9 @@ export function Archives() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="px-6 pt-1 pb-10"
+          className="px-6 pt-1 pb-8"
         >
           <motion.div variants={itemVariants}>
-            <div
-              className="text-[9px] text-white/30 uppercase tracking-[0.28em] mb-3"
-              style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }}
-            >
-              Complete Collection
-            </div>
             <h1
               className="text-[40px] text-white uppercase leading-[0.92] tracking-[-0.01em]"
               style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
@@ -188,29 +199,25 @@ export function Archives() {
                   {/* Generation header */}
                   <motion.button
                     onClick={() => toggleGeneration(gen.id)}
-                    whileTap={{ scale: 0.98 }}
+                    whileTap={{ opacity: 0.7 }}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 border-[#1E1E1E] bg-[#141414] mb-2"
+                    className="w-full flex items-center justify-between py-3 mb-3"
+                    style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
                   >
-                    <div className="text-left">
-                      <div
-                        className="text-[12px] text-white uppercase tracking-wider"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-1 h-1 rounded-full bg-brand-orange" />
+                      <span
+                        className="text-[10px] text-white/50 uppercase tracking-[0.28em]"
+                        style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}
                       >
                         {gen.label}
-                      </div>
-                      <div
-                        className="text-[8px] text-white/30 uppercase tracking-[0.22em] mt-0.5"
-                        style={{ fontFamily: "'Inter', sans-serif" }}
-                      >
-                        {gen.subtitle}
-                      </div>
+                      </span>
                     </div>
                     <motion.div
                       animate={{ rotate: isOpen ? 180 : 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 24 }}
                     >
-                      <ChevronDown size={14} className="text-white/40" />
+                      <ChevronDown size={12} className="text-white/30" />
                     </motion.div>
                   </motion.button>
 
@@ -228,11 +235,18 @@ export function Archives() {
                           {gen.volumes.map((vol) => (
                             <motion.div
                               key={vol.num}
-                              className="relative rounded-2xl border-2 border-[#1E1E1E] bg-[#141414] overflow-hidden cursor-pointer"
+                              ref={(el) => { volRefs.current[vol.num] = el; }}
+                              className="relative rounded-2xl border-2 bg-[#141414] overflow-hidden cursor-pointer"
+                              animate={{
+                                borderColor: highlightedVol === vol.num ? "rgba(255,255,255,0.85)" : "rgba(30,30,30,1)",
+                                boxShadow: highlightedVol === vol.num
+                                  ? "0 0 0 2px rgba(255,255,255,0.25), 0 0 28px 4px rgba(255,255,255,0.12)"
+                                  : "0 0 0 0px rgba(255,255,255,0)",
+                              }}
+                              transition={{ duration: 0.35 }}
                               whileTap={{ scale: 0.97 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 28 }}
                               onClick={() =>
-                                vol.owned ? navigate("/reader") : openReader("featured")
+                                vol.owned ? navigate(vol.num === "1.0" ? "/pdf-reader" : "/reader") : openReader("featured")
                               }
                             >
                               <div className="flex gap-4 p-4">
@@ -247,54 +261,50 @@ export function Archives() {
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                                  <div>
-                                    <div
-                                      className="text-[8px] text-white/30 uppercase tracking-[0.22em] mb-1"
-                                      style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }}
-                                    >
-                                      Vol {vol.num}
-                                    </div>
-                                    <div
-                                      className="text-[14px] text-white uppercase leading-tight"
-                                      style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
-                                    >
-                                      {vol.title}
-                                    </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                  <div
+                                    className="text-[8px] text-white/30 uppercase tracking-[0.22em] mb-1"
+                                    style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }}
+                                  >
+                                    Vol {vol.num}
                                   </div>
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <div
-                                      className={`text-[7px] uppercase tracking-wider border rounded-full px-2.5 py-1 ${
-                                        vol.owned
-                                          ? "border-white/20 text-white/50"
-                                          : "border-white/10 text-white/25"
-                                      }`}
-                                      style={{ fontFamily: "'Inter', sans-serif" }}
-                                    >
-                                      {vol.status}
-                                    </div>
-                                    {!vol.owned && (
-                                      <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate("/cart");
-                                        }}
-                                        className="flex items-center gap-1 text-[7px] text-brand-orange uppercase tracking-wider border border-brand-orange/30 rounded-full px-2 py-1"
-                                      >
-                                        <ShoppingBag size={8} /> Buy
-                                      </motion.button>
-                                    )}
+                                  <div
+                                    className="text-[15px] text-white uppercase leading-tight"
+                                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
+                                  >
+                                    {vol.title}
                                   </div>
                                 </div>
 
-                                {/* Volume decoration */}
-                                <div className="flex items-center">
+                                {/* Volume decoration & Icons */}
+                                <div className="flex flex-col items-end justify-between ml-2">
                                   <div
-                                    className="text-[32px] text-white/6 leading-none tracking-tighter"
+                                    className="text-[36px] text-white/6 leading-none tracking-tighter"
                                     style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
                                   >
                                     {vol.num}
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-auto pt-2">
+                                    <motion.button
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openReader("featured");
+                                      }}
+                                      className="text-white/30 hover:text-white transition-colors"
+                                    >
+                                      <Eye size={14} />
+                                    </motion.button>
+                                    <motion.button
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate("/cart");
+                                      }}
+                                      className="text-white/30 hover:text-brand-orange transition-colors"
+                                    >
+                                      <ShoppingCart size={14} />
+                                    </motion.button>
                                   </div>
                                 </div>
                               </div>

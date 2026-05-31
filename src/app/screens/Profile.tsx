@@ -96,7 +96,7 @@ export function Profile() {
       transition={{ duration: 0.5 }}
       className="flex-1 flex flex-col min-h-0"
     >
-      <TopBar />
+      <TopBar showBack />
 
       <main
         className="flex-1 overflow-y-auto pb-32"
