@@ -71,25 +71,25 @@ export function TopBar({ title = "AIR & STEEL", showBack = false }: TopBarProps)
           <AnimatePresence mode="wait" initial={false}>
             {theme === "dark" ? (
               <motion.span
-                key="moon"
+                key="sun"
                 initial={{ opacity: 0, rotate: -25, scale: 0.75 }}
                 animate={{ opacity: 1, rotate: 0, scale: 1 }}
                 exit={{ opacity: 0, rotate: 25, scale: 0.75 }}
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 className="flex"
               >
-                <Moon size={15} strokeWidth={1.4} className="text-white/55" />
+                <Sun size={15} strokeWidth={1.4} className="text-white/55" />
               </motion.span>
             ) : (
               <motion.span
-                key="sun"
+                key="moon"
                 initial={{ opacity: 0, rotate: 25, scale: 0.75 }}
                 animate={{ opacity: 1, rotate: 0, scale: 1 }}
                 exit={{ opacity: 0, rotate: -25, scale: 0.75 }}
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 className="flex"
               >
-                <Sun size={15} strokeWidth={1.4} className="text-white/55" />
+                <Moon size={15} strokeWidth={1.4} className="text-white/55" />
               </motion.span>
             )}
           </AnimatePresence>
