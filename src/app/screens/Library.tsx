@@ -135,9 +135,8 @@ export function Library() {
                   <img
                     src={item.img}
                     alt={`Vol ${item.vol}`}
-                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
                   {/* Read Now overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-400">
@@ -149,11 +148,11 @@ export function Library() {
                   </div>
 
                   {/* Bottom info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <div className="text-[7px] text-white/40 uppercase tracking-widest mb-0.5">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 drop-shadow-md">
+                    <div className="text-[7px] text-[#FFFFFF]/70 uppercase tracking-widest mb-0.5">
                       Vol 0{item.vol}
                     </div>
-                    <div className="text-[9px] font-bold text-white uppercase tracking-wider">
+                    <div className="text-[9px] font-bold text-[#FFFFFF] uppercase tracking-wider">
                       {item.title}
                     </div>
                     {/* Progress bar */}
@@ -163,7 +162,7 @@ export function Library() {
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>
-                    <div className="text-[6px] text-white/30 uppercase tracking-widest mt-1">
+                    <div className="text-[6px] text-[#FFFFFF]/50 uppercase tracking-widest mt-1">
                       {item.progress}% read
                     </div>
                   </div>
@@ -231,7 +230,7 @@ export function Library() {
                     <img
                       src={bm.img}
                       alt={bm.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-70"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   </div>
 
@@ -295,7 +294,7 @@ export function Library() {
                   <img
                     src={item.img}
                     alt={`Vol ${item.vol}`}
-                    className="absolute inset-0 w-full h-full object-cover opacity-30"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider">

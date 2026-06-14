@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
 import { ArrowRight, Bookmark, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
-import { useReader } from "../context/ReaderContext";
+import { isVolumeOwned } from "../data/ownership";
 
 const VOL04_IMAGE =
   "https://images.unsplash.com/photo-1699349578489-54436281e9e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBjYXIlMjBnYXJhZ2UlMjB3b3Jrc2hvcCUyMG1pbmltYWxpc3R8ZW58MXx8fHwxNzc4MDcyMDAzfDA&ixlib=rb-4.1.0&q=80&w=1080";
@@ -37,9 +37,9 @@ const itemVariants = {
 };
 
 const OWNED_VOLUMES = [
-  { label: "Vol 1.0", pct: 100, img: GENESIS_IMAGE },
-  { label: "Vol 04", pct: 68, img: VOL04_IMAGE },
-  { label: "Vol 03", pct: 32, img: VOL03_IMAGE },
+  { label: "Vol 1.0", num: "1.0", pct: 100, img: GENESIS_IMAGE },
+  { label: "Vol 04", num: "04",  pct: 68,  img: VOL04_IMAGE },
+  { label: "Vol 03", num: "03",  pct: 32,  img: VOL03_IMAGE },
 ];
 
 const DIGITAL_OWNED = 3;
@@ -71,28 +71,30 @@ const bookmarks = [
   },
 ];
 
-// Collection grid — 2 cols × 5 rows = 10 slots
+// Collection grid — 2 cols × 5 rows = 10 slots.
+// Ownership is derived from the single source of truth in data/ownership.
 const COLLECTION_SLOTS = [
-  { num: "1.0", title: "Genesis", owned: true, img: GENESIS_IMAGE },
-  { num: "04", title: "Silence", owned: true, img: VOL04_IMAGE },
-  { num: "03", title: "Neon", owned: true, img: VOL03_IMAGE },
-  { num: "02", title: "Static", owned: false, img: VOL02_IMAGE },
-  { num: "01", title: "Origin", owned: false, img: VOL01_IMAGE },
-  { num: "", title: "", owned: false, img: "" },
-  { num: "", title: "", owned: false, img: "" },
-  { num: "", title: "", owned: false, img: "" },
-  { num: "", title: "", owned: false, img: "" },
-  { num: "", title: "", owned: false, img: "" },
-];
+  { num: "1.0", title: "Genesis", img: GENESIS_IMAGE },
+  { num: "04", title: "Silence", img: VOL04_IMAGE },
+  { num: "03", title: "Neon", img: VOL03_IMAGE },
+  { num: "02", title: "Static", img: VOL02_IMAGE },
+  { num: "01", title: "Origin", img: VOL01_IMAGE },
+  { num: "", title: "", img: "" },
+  { num: "", title: "", img: "" },
+  { num: "", title: "", img: "" },
+  { num: "", title: "", img: "" },
+  { num: "", title: "", img: "" },
+].map((slot) => ({ ...slot, owned: isVolumeOwned(slot.num) }));
 
 export function Cockpit() {
-  const { openReader } = useReader();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeVolIdx, setActiveVolIdx] = useState(0);
   const [readingTime] = useState(getStoredReadingTime);
   const bookmarksRef = useRef<HTMLDivElement>(null);
+  const libraryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [highlightedLibraryVol, setHighlightedLibraryVol] = useState<string | null>(null);
 
   const advanceVol = useCallback(() => {
     setActiveVolIdx((i) => (i + 1) % OWNED_VOLUMES.length);
@@ -250,6 +252,7 @@ export function Cockpit() {
 
         {/* Digital Library */}
         <motion.div
+          ref={libraryRef}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -284,22 +287,26 @@ export function Cockpit() {
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 onClick={() => navigate(item.label === "Vol 1.0" ? "/pdf-reader" : "/reader")}
               >
-                <div
-                  className="rounded-2xl border-2 border-[#2A2A2A] bg-[#141414] relative overflow-hidden"
+                <motion.div
+                  className="rounded-2xl border-2 bg-[#141414] relative overflow-hidden"
                   style={{ aspectRatio: "3/4" }}
+                  animate={{
+                    borderColor: highlightedLibraryVol === item.num ? "rgba(255,255,255,0.85)" : "rgba(42,42,42,1)",
+                    boxShadow: highlightedLibraryVol === item.num
+                      ? "0 0 0 2px rgba(255,255,255,0.25), 0 0 28px 4px rgba(255,255,255,0.12)"
+                      : "0 0 0 0px rgba(255,255,255,0)",
+                  }}
+                  transition={{ duration: 0.35 }}
                 >
                   <img
                     src={item.img}
                     alt={item.label}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
-
                   {/* Bottom info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 drop-shadow-md">
                     <div
-                      className="text-[7px] uppercase tracking-widest mb-0.5"
-                      style={{ color: "rgba(255,255,255,0.45)" }}
+                      className="text-[7px] uppercase tracking-widest mb-0.5 text-[#FFFFFF]/50"
                     >
                       {item.label}
                     </div>
@@ -311,13 +318,12 @@ export function Cockpit() {
                       />
                     </div>
                     <div
-                      className="text-[6px] uppercase tracking-widest mt-1.5"
-                      style={{ color: "rgba(255,255,255,0.35)" }}
+                      className="text-[6px] uppercase tracking-widest mt-1.5 text-[#FFFFFF]/40"
                     >
                       {item.pct}% read
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
 
@@ -374,7 +380,7 @@ export function Cockpit() {
                 className="rounded-2xl border border-[#2A2A2A] bg-[#141414] overflow-hidden cursor-pointer"
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                onClick={() => openReader("featured")}
+                onClick={() => navigate("/reader")}
               >
                 <div className="flex gap-4 p-4">
                   {/* Thumbnail */}
@@ -382,7 +388,7 @@ export function Cockpit() {
                     <img
                       src={bm.img}
                       alt={bm.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-70"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   </div>
 
@@ -487,7 +493,16 @@ export function Cockpit() {
                           : "border-dashed border-[#222] bg-[#141414]/40"
                       }`}
                       style={{ aspectRatio: "3/4" }}
-                      onClick={() => slot.owned ? navigate(slot.num === "1.0" ? "/pdf-reader" : "/reader") : undefined}
+                      onClick={() => {
+                        if (!slot.num) return;
+                        if (slot.owned) {
+                          libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          setHighlightedLibraryVol(slot.num);
+                          setTimeout(() => setHighlightedLibraryVol(null), 2500);
+                        } else {
+                          navigate("/archives", { state: { highlight: slot.num } });
+                        }
+                      }}
                     >
                       {slot.img ? (
                         <>
@@ -497,17 +512,15 @@ export function Cockpit() {
                             className="absolute inset-0 w-full h-full object-cover"
                             style={{ opacity: slot.owned ? 1 : 0.35 }}
                           />
-                          <div className={`absolute inset-0 bg-gradient-to-t ${slot.owned ? "from-black/70 to-transparent" : "from-black/80 via-black/40 to-black/20"}`} />
-                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <div className="absolute bottom-0 left-0 right-0 p-3 drop-shadow-md">
                             <div
-                              className="text-[7px] uppercase tracking-widest mb-0.5"
-                              style={{ color: "rgba(255,255,255,0.45)" }}
+                              className="text-[7px] uppercase tracking-widest mb-0.5 text-[#FFFFFF]/50"
                             >
                               Vol {slot.num}
                             </div>
                             <div
-                              className="text-[10px] uppercase leading-tight"
-                              style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#ffffff" }}
+                              className="text-[10px] uppercase leading-tight text-[#FFFFFF]"
+                              style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
                             >
                               {slot.title}
                             </div>

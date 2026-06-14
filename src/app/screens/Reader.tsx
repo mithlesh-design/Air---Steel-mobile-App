@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Bookmark, Maximize2, Minimize2, AlignJustify, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -51,11 +51,20 @@ const TOTAL_PAGES = 140;
 
 export function Reader() {
   const navigate = useNavigate();
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState<number>(() => {
+    const saved = localStorage.getItem("air-steel-reader-position");
+    const parsed = saved ? parseInt(saved, 10) : NaN;
+    return !isNaN(parsed) && parsed >= 0 && parsed < MAGAZINE_PAGES.length ? parsed : 0;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("air-steel-reader-position", String(pageIndex));
+  }, [pageIndex]);
   const [bookmarked, setBookmarked] = useState(false);
   const [direction, setDirection] = useState(1);
   const [showContents, setShowContents] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSpeedSwiping, setIsSpeedSwiping] = useState(false);
 
   const currentPage = MAGAZINE_PAGES[pageIndex];
 
@@ -79,18 +88,23 @@ export function Reader() {
   const speedSwipeActive = useRef(false);
 
   const triggerSpeedSwipe = useCallback((dir: number) => {
-    const delays = [120, 120, 180, 260, 380];
+    if (isExpanded) return;
+    // Absolute fire times (ms): fast burst that decelerates naturally
+    const fireTimes = [70, 160, 280, 440, 650];
     let current = pageIndex;
-    delays.forEach((delay, i) => {
-      const accumulated = delays.slice(0, i).reduce((a, b) => a + b, 0);
+    setIsSpeedSwiping(true);
+    fireTimes.forEach((fireAt, i) => {
       setTimeout(() => {
         current = Math.max(0, Math.min(MAGAZINE_PAGES.length - 1, current + dir));
         setDirection(dir);
         setPageIndex(current);
-        if (i === delays.length - 1) speedSwipeActive.current = false;
-      }, accumulated + delay);
+        if (i === fireTimes.length - 1) {
+          speedSwipeActive.current = false;
+          setIsSpeedSwiping(false);
+        }
+      }, fireAt);
     });
-  }, [pageIndex]);
+  }, [pageIndex, isExpanded]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -105,7 +119,7 @@ export function Reader() {
     if (Math.abs(deltaX) < 15) return;
     e.preventDefault(); // suppress synthetic click on tap-zone buttons
     const dir = deltaX < 0 ? 1 : -1;
-    if (velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
+    if (!isExpanded && velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
       speedSwipeActive.current = true;
       triggerSpeedSwipe(dir);
     } else {
@@ -182,7 +196,7 @@ export function Reader() {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <AnimatePresence mode="wait" custom={direction}>
+          <AnimatePresence mode={isSpeedSwiping ? "sync" : "wait"} custom={direction}>
             <motion.div
               key={pageIndex}
               custom={direction}
@@ -190,7 +204,9 @@ export function Reader() {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={isSpeedSwiping
+                ? { duration: 0.13, ease: [0.22, 1, 0.36, 1] }
+                : { type: "spring", stiffness: 300, damping: 30 }}
               className="relative w-full"
               style={{ aspectRatio: "3/4.2" }}
             >
@@ -207,27 +223,23 @@ export function Reader() {
                   src={currentPage.image}
                   alt={currentPage.headline}
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: 0.88 }}
                 />
 
-                {/* Dark overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
-
                 {/* Top magazine header strip */}
-                <div className="absolute top-0 left-0 right-0 px-5 pt-5 flex justify-between items-center">
-                  <div className="text-[7px] text-white/50 uppercase tracking-[0.3em] font-medium">
+                <div className="absolute top-0 left-0 right-0 px-5 pt-5 flex justify-between items-center drop-shadow-md">
+                  <div className="text-[7px] text-[#FFFFFF]/80 uppercase tracking-[0.3em] font-medium">
                     Air &amp; Steel
                   </div>
-                  <div className="text-[7px] text-white/35 uppercase tracking-[0.25em]">
+                  <div className="text-[7px] text-[#FFFFFF]/60 uppercase tracking-[0.25em]">
                     {String(currentPage.num).padStart(3, "0")}
                   </div>
                 </div>
 
                 {/* Section label */}
-                <div className="absolute top-12 left-5">
+                <div className="absolute top-12 left-5 drop-shadow-md">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-1 h-1 rounded-full bg-white/60" />
-                    <span className="text-[7px] text-white/60 uppercase tracking-[0.25em]">
+                    <span className="w-1 h-1 rounded-full bg-[#FFFFFF]/80" />
+                    <span className="text-[7px] text-[#FFFFFF]/80 uppercase tracking-[0.25em]">
                       {currentPage.section}
                     </span>
                   </div>
@@ -241,15 +253,15 @@ export function Reader() {
                 </div>
 
                 {/* Bottom content */}
-                <div className="absolute bottom-0 left-0 right-0 px-5 pb-6">
+                <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 drop-shadow-md">
                   <h3
-                    className="text-[22px] font-bold text-white uppercase tracking-wider leading-tight mb-3 whitespace-pre-line"
-                    style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
+                    className="text-[22px] font-bold text-[#FFFFFF] uppercase tracking-wider leading-tight mb-3 whitespace-pre-line"
+                    style={{ textShadow: "0 2px 10px rgba(0,0,0,0.8)" }}
                   >
                     {currentPage.headline}
                   </h3>
-                  <div className="h-px w-8 bg-white/40 rounded-full mb-2" />
-                  <div className="text-[8px] text-white/40 uppercase tracking-[0.22em]">
+                  <div className="h-px w-8 bg-[#FFFFFF]/70 rounded-full mb-2" />
+                  <div className="text-[8px] text-[#FFFFFF]/70 uppercase tracking-[0.22em]">
                     Vol 04 · Silence
                   </div>
                 </div>
@@ -414,7 +426,7 @@ export function Reader() {
                       <img
                         src={p.image}
                         alt=""
-                        className="absolute inset-0 w-full h-full object-cover opacity-70"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     </div>
 
@@ -471,9 +483,6 @@ export function Reader() {
                 className="absolute inset-0 w-full h-full object-cover"
               />
             </AnimatePresence>
-
-            {/* Subtle bottom gradient for nav bar legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
             {/* Collapse button — top right */}
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-12">

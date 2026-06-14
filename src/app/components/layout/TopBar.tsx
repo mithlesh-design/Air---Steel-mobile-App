@@ -1,4 +1,5 @@
 import { useTheme } from "../../context/ThemeContext";
+import { useCart } from "../../context/CartContext";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingBag, Moon, Sun, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -12,6 +13,7 @@ interface TopBarProps {
 
 export function TopBar({ title = "AIR & STEEL", showBack = false }: TopBarProps) {
   const { theme, toggleTheme } = useTheme();
+  const { cartItems } = useCart();
   const navigate = useNavigate();
 
   return (
@@ -52,10 +54,27 @@ export function TopBar({ title = "AIR & STEEL", showBack = false }: TopBarProps)
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center justify-center"
+          className="relative flex items-center justify-center"
           aria-label="Cart"
         >
           <ShoppingBag size={17} className="text-white/50" />
+          <AnimatePresence>
+            {cartItems.length > 0 && (
+              <motion.span
+                key="badge"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center px-[3px]"
+                style={{ backgroundColor: "#C85A00" }}
+              >
+                <span className="text-[8px] font-bold text-white leading-none" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {cartItems.length > 9 ? "9+" : cartItems.length}
+                </span>
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.button>
 
         {/* Theme toggle — animated moon / sun */}

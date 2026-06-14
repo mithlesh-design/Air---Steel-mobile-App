@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { motion } from "motion/react";
-import { X, Bookmark, Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
+import { X, Bookmark, Maximize2, Minimize2, RotateCcw, AlignJustify } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -22,11 +22,17 @@ export function PdfReader() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [containerWidth, setContainerWidth] = useState(340);
+  const [showContents, setShowContents] = useState(false);
+  const [jumpValue, setJumpValue] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
+
+  // Finger-tracking pager (normal mode)
+  const x = useMotionValue(0);
+  const draggingRef = useRef(false);
 
   // Track container width so Page fills it correctly in both normal + expanded modes
   useEffect(() => {
@@ -40,9 +46,15 @@ export function PdfReader() {
     const w = el.getBoundingClientRect().width;
     if (w > 0) setContainerWidth(Math.floor(w));
     return () => obs.disconnect();
-  }, [pdfLoaded]); // re-attach once PDF loads so containerRef is rendered
+  }, [pdfLoaded, isExpanded]); // re-attach when the active container (normal vs expanded) changes
 
   const effectiveWidth = Math.max(100, Math.floor(containerWidth * zoomLevel));
+  // Normal mode renders a smaller, framed card (consistent with the Silence reader)
+  const cardWidth = Math.max(100, Math.floor(Math.min(containerWidth * 0.9, 320)));
+
+  const jumpToPage = (n: number) => {
+    if (!Number.isNaN(n)) setPageIndex(Math.min(numPages - 1, Math.max(0, n - 1)));
+  };
 
   const goNext = useCallback(() => {
     if (pageIndex < numPages - 1) setPageIndex((i) => i + 1);
@@ -51,6 +63,32 @@ export function PdfReader() {
   const goPrev = useCallback(() => {
     if (pageIndex > 0) setPageIndex((i) => i - 1);
   }, [pageIndex]);
+
+  // ── Finger-tracking pager: slide the track to the neighbour, then recentre ──
+  const snapSpring = { type: "spring", stiffness: 300, damping: 30 } as const;
+
+  const commit = useCallback((dir: number) => {
+    const target = dir > 0 ? -containerWidth : containerWidth;
+    animate(x, target, snapSpring).then(() => {
+      setPageIndex((i) => Math.max(0, Math.min(numPages - 1, i + dir)));
+      x.set(0);
+    });
+  }, [containerWidth, numPages, x]);
+
+  const paginate = useCallback((dir: number) => {
+    if (dir > 0 && pageIndex < numPages - 1) commit(1);
+    else if (dir < 0 && pageIndex > 0) commit(-1);
+  }, [pageIndex, numPages, commit]);
+
+  const handleDragEnd = (info: { offset: { x: number }; velocity: { x: number } }) => {
+    const { offset, velocity } = info;
+    const hasNext = pageIndex < numPages - 1;
+    const hasPrev = pageIndex > 0;
+    const threshold = containerWidth * 0.25;
+    if ((offset.x < -threshold || velocity.x < -500) && hasNext) commit(1);
+    else if ((offset.x > threshold || velocity.x > 500) && hasPrev) commit(-1);
+    else animate(x, 0, snapSpring);
+  };
 
   const triggerSpeedSwipe = useCallback((dir: number) => {
     const delays = [120, 120, 180, 260, 380];
@@ -118,13 +156,25 @@ export function PdfReader() {
               Genesis
             </div>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-[#141414] border border-[#2A2A2A] flex items-center justify-center mt-1"
-          >
-            <X size={14} className="text-white/70" />
-          </motion.button>
+          <div className="flex items-center gap-2.5 mt-1">
+            {/* Contents — jump to page */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { setJumpValue(String(pageIndex + 1)); setShowContents(true); }}
+              aria-label="Contents — jump to page"
+              className="w-10 h-10 rounded-xl bg-[#141414] border border-[#2A2A2A] flex items-center justify-center"
+            >
+              <AlignJustify size={14} className="text-white/70" />
+            </motion.button>
+            {/* Close */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-full bg-[#141414] border border-[#2A2A2A] flex items-center justify-center"
+            >
+              <X size={14} className="text-white/70" />
+            </motion.button>
+          </div>
         </div>
       )}
 
@@ -170,19 +220,15 @@ export function PdfReader() {
           </div>
         )}
 
-        {/* ── PAGE CONTAINER — CSS switches between card and fullscreen ── */}
-        {pdfLoaded && !pdfError && (
+        {/* ── EXPANDED: single page with scroll + zoom (unchanged) ── */}
+        {pdfLoaded && !pdfError && isExpanded && (
           <div
             ref={containerRef}
-            className={
-              isExpanded
-                ? "absolute inset-0 z-50 bg-[#080808] overflow-auto flex items-start justify-center"
-                : "flex-1 flex items-center justify-center px-4 overflow-hidden min-h-0"
-            }
+            className="absolute inset-0 z-50 bg-[#080808] overflow-auto flex items-start justify-center"
             style={{
               touchAction: zoomLevel > 1 ? "auto" : "pan-y",
-              paddingTop: isExpanded ? 80 : 0,
-              paddingBottom: isExpanded ? 96 : 0,
+              paddingTop: 80,
+              paddingBottom: 96,
             }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -214,11 +260,89 @@ export function PdfReader() {
                   style={{ width: effectiveWidth, height: Math.floor(effectiveWidth * 1.41) }}
                 />
               }
-              className={isExpanded ? "" : "rounded-xl overflow-hidden shadow-2xl"}
             />
           </div>
         )}
+
+        {/* ── NORMAL: finger-tracking page pager (cards follow the swipe) ── */}
+        {pdfLoaded && !pdfError && !isExpanded && (
+          <div className="flex-1 flex items-center justify-center px-4 overflow-hidden min-h-0">
+            <div
+              ref={containerRef}
+              className="relative w-full h-full overflow-hidden"
+              style={{ touchAction: "pan-y" }}
+            >
+              <motion.div
+                className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                style={{ x }}
+                drag="x"
+                dragElastic={0.12}
+                dragConstraints={{
+                  left: pageIndex < numPages - 1 ? -containerWidth : 0,
+                  right: pageIndex > 0 ? containerWidth : 0,
+                }}
+                onPointerDown={() => { draggingRef.current = false; }}
+                onDragStart={() => { draggingRef.current = true; }}
+                onDragEnd={(_e, info) => handleDragEnd(info)}
+                onClick={(e) => {
+                  if (draggingRef.current) return;
+                  const { left, width } = e.currentTarget.getBoundingClientRect();
+                  paginate(e.clientX - left < width / 2 ? -1 : 1);
+                }}
+              >
+                {[pageIndex - 1, pageIndex, pageIndex + 1].map((p) => {
+                  if (p < 0 || p >= numPages) return null;
+                  return (
+                    <div
+                      key={p}
+                      className="absolute top-0 h-full flex items-center justify-center"
+                      style={{
+                        width: containerWidth,
+                        transform: `translateX(${(p - pageIndex) * containerWidth}px)`,
+                      }}
+                    >
+                      <div
+                        className="rounded-[22px] overflow-hidden pointer-events-none"
+                        style={{
+                          boxShadow:
+                            "0 0 0 1px rgba(255,255,255,0.07), 0 30px 80px -10px rgba(0,0,0,0.95), 0 0 60px -20px rgba(255,255,255,0.04)",
+                        }}
+                      >
+                        <Page
+                          pageNumber={p + 1}
+                          width={cardWidth}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          loading={
+                            <div
+                              className="bg-[#111] animate-pulse"
+                              style={{ width: cardWidth, height: Math.floor(cardWidth * 1.41) }}
+                            />
+                          }
+                          className="block"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </div>
+          </div>
+        )}
       </Document>
+
+      {/* ── PROGRESS BAR (normal mode) — slim fill, scales to any page count ── */}
+      {pdfLoaded && !pdfError && !isExpanded && numPages > 0 && (
+        <div className="shrink-0 flex justify-center px-8 pb-3 z-20">
+          <div className="w-full max-w-[240px] h-0.5 bg-white/12 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-white/80 rounded-full"
+              animate={{ width: `${((pageIndex + 1) / numPages) * 100}%` }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── BOTTOM PILL (normal mode) ── */}
       {pdfLoaded && !pdfError && !isExpanded && (
@@ -287,21 +411,11 @@ export function PdfReader() {
             </motion.button>
           </div>
 
-          {/* Bottom controls */}
+          {/* Bottom controls — zoom only; page nav is by tapping the reader's left/right edges */}
           <div
-            className="absolute bottom-0 left-0 right-0 z-[60] pb-10 px-5 pt-4 flex items-center justify-between"
+            className="absolute bottom-0 left-0 right-0 z-[60] pb-10 px-5 pt-4 flex items-center justify-center"
             style={{ background: "linear-gradient(to top, rgba(8,8,8,0.95) 60%, transparent)" }}
           >
-            {/* Prev */}
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={goPrev}
-              disabled={pageIndex === 0}
-              className="w-10 h-10 rounded-full bg-white/8 border border-white/12 flex items-center justify-center disabled:opacity-25"
-            >
-              <ChevronLeft size={16} className="text-white/70" />
-            </motion.button>
-
             {/* Zoom controls */}
             <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md rounded-full px-5 py-2.5 border border-white/10">
               <motion.button
@@ -312,12 +426,25 @@ export function PdfReader() {
               >
                 −
               </motion.button>
-              <span
-                className="text-[11px] text-white/50 tabular-nums w-9 text-center"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                {Math.round(zoomLevel * 100)}%
-              </span>
+              {zoomLevel > 1 ? (
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setZoomLevel(1.0)}
+                  aria-label="Reset zoom to 100%"
+                  className="flex items-center gap-1 text-[11px] text-brand-orange tabular-nums px-1"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {Math.round(zoomLevel * 100)}%
+                  <RotateCcw size={11} strokeWidth={2} />
+                </motion.button>
+              ) : (
+                <span
+                  className="text-[11px] text-white/50 tabular-nums w-9 text-center"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+              )}
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={zoomIn}
@@ -327,19 +454,123 @@ export function PdfReader() {
                 +
               </motion.button>
             </div>
-
-            {/* Next */}
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={goNext}
-              disabled={pageIndex === numPages - 1}
-              className="w-10 h-10 rounded-full bg-white/8 border border-white/12 flex items-center justify-center disabled:opacity-25"
-            >
-              <ChevronRight size={16} className="text-white/70" />
-            </motion.button>
           </div>
         </>
       )}
+
+      {/* ── CONTENTS — jump to page (normal mode) ── */}
+      <AnimatePresence>
+        {showContents && !isExpanded && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 z-40"
+              onClick={() => setShowContents(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
+              className="absolute right-0 top-0 bottom-0 w-72 bg-[#0D0D0D] border-l border-[#1E1E1E] z-50 flex flex-col"
+            >
+              {/* Header */}
+              <div className="px-5 pt-12 pb-5 border-b border-[#1A1A1A] flex items-center justify-between">
+                <div>
+                  <div className="text-[8px] text-white/50 uppercase tracking-[0.25em] mb-1">
+                    Contents
+                  </div>
+                  <div className="text-[14px] font-bold text-white uppercase tracking-wider">
+                    Vol 1.0 · Genesis
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowContents(false)}
+                  className="w-7 h-7 rounded-full bg-[#1A1A1A] flex items-center justify-center"
+                >
+                  <X size={12} className="text-white/60" />
+                </button>
+              </div>
+
+              {/* Jump-to-page body */}
+              <div className="flex-1 px-5 pt-6 flex flex-col gap-6">
+                <div>
+                  <div className="text-[8px] text-white/40 uppercase tracking-[0.25em] mb-2">
+                    Current Page
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span
+                      className="text-[40px] font-bold text-white leading-none tabular-nums"
+                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    >
+                      {pageNum}
+                    </span>
+                    <span className="text-[14px] text-white/30 tabular-nums">/ {numPages}</span>
+                  </div>
+                </div>
+
+                {/* Slider — live scrub */}
+                <input
+                  type="range"
+                  min={1}
+                  max={Math.max(1, numPages)}
+                  value={pageIndex + 1}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10);
+                    setJumpValue(String(n));
+                    jumpToPage(n);
+                  }}
+                  aria-label="Scrub pages"
+                  className="w-full accent-white"
+                />
+
+                {/* Number entry + Go */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={numPages}
+                    value={jumpValue}
+                    onChange={(e) => setJumpValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") jumpToPage(parseInt(jumpValue, 10)); }}
+                    aria-label="Page number"
+                    placeholder="Page #"
+                    className="flex-1 min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-4 text-[13px] text-white placeholder:text-white/30 outline-none focus:border-white/40 tabular-nums"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  />
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => jumpToPage(parseInt(jumpValue, 10))}
+                    className="min-h-[40px] px-5 rounded-xl bg-white text-black text-[10px] uppercase tracking-[0.18em]"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+                  >
+                    Go
+                  </motion.button>
+                </div>
+
+                {/* Quick jumps */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => jumpToPage(1)}
+                    className="flex-1 min-h-[40px] rounded-xl border border-[#2A2A2A] text-[9px] text-white/55 uppercase tracking-[0.18em]"
+                  >
+                    First Page
+                  </button>
+                  <button
+                    onClick={() => jumpToPage(numPages)}
+                    className="flex-1 min-h-[40px] rounded-xl border border-[#2A2A2A] text-[9px] text-white/55 uppercase tracking-[0.18em]"
+                  >
+                    Last Page
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

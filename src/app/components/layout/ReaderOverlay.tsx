@@ -10,12 +10,127 @@ import c3 from "../../../imports/C3_LeMans.jpg";
 import c4 from "../../../imports/C4_Testarossa.jpg";
 import c5 from "../../../imports/C5_Atlantic.jpg";
 import coverImage from "../../../imports/image-2.png";
+import genesisCurationImage from "../../../imports/G_Curation_Insights_01.372b9f4f.jpg";
 import p1 from "../../../imports/Preview_1.png";
 import p2 from "../../../imports/Preview_2.png";
 import p3 from "../../../imports/Preview_3.png";
 import p4 from "../../../imports/Preview_4.png";
 import p5 from "../../../imports/Preview_5.png";
 import { ARTICLES } from "../../data/articles";
+
+type VolumeMeta = {
+  title: string;
+  subtitle: string;
+  description: JSX.Element;
+  img: string;
+  curationImg?: string;
+  cartIdPrefix: string;
+  readerPath: string;
+};
+
+const VOLUME_META: Record<string, VolumeMeta> = {
+  "1.0": {
+    title: "Volume 1.0",
+    subtitle: "Genesis",
+    img: coverImage,
+    curationImg: genesisCurationImage,
+    cartIdPrefix: "vol-1",
+    readerPath: "/pdf-reader",
+    description: (
+      <>
+        <p className="mb-4">
+          In the inaugural volume of Air &amp; Steel Magazine, we take you to a pilgrimage through the formative milestones of the automotive timeline. Volume 1.0: Genesis is a curated journey through motoring history, from the singular moment of invention to the high-octane dawn of global motorsport.
+        </p>
+        <p className="mb-4">
+          We explore the machines that defied convention: the outliers, the icons, and the experiments that paved the way for the legendary. Beyond rubber and steel, we document the human impulse — the unrelenting passion for speed and the pursuit of excellence that transformed the early automobile into a cultural legacy.
+        </p>
+        <p>
+          Genesis is more than a tour of history, it is a testament to the vigor that took us from the first patent to the modern grid.
+        </p>
+      </>
+    ),
+  },
+  "04": {
+    title: "Volume 04",
+    subtitle: "Silence",
+    img: "https://images.unsplash.com/photo-1699349578489-54436281e9e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBjYXIlMjBnYXJhZ2UlMjB3b3Jrc2hvcCUyMG1pbmltYWxpc3R8ZW58MXx8fHwxNzc4MDcyMDAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+    cartIdPrefix: "vol-04",
+    readerPath: "/reader",
+    description: (
+      <>
+        <p className="mb-4">
+          Silence is not the absence of sound — it is the presence of intention. Volume 04 examines the architects of stillness: the collectors, engineers, and designers who have made restraint their most radical statement.
+        </p>
+        <p className="mb-4">
+          From climate-controlled vaults in Switzerland to minimalist Tokyo ateliers, we document the spaces where machines are not stored but enshrined. Here, the void amplifies the object.
+        </p>
+        <p>
+          This is a volume for those who understand that the most powerful thing a machine can do is stand still.
+        </p>
+      </>
+    ),
+  },
+  "03": {
+    title: "Volume 03",
+    subtitle: "Neon",
+    img: "https://images.unsplash.com/photo-1762522930348-070b98229e9b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcmNoaXRlY3R1cmFsJTIwcGhvdG9ncmFwaHklMjBkYXJrJTIwbWFnYXppbmUlMjBlZGl0b3JpYWx8ZW58MXx8fHwxNzc4MDcyMDAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+    cartIdPrefix: "vol-03",
+    readerPath: "/reader",
+    description: (
+      <>
+        <p className="mb-4">
+          When the city sleeps, a different culture surfaces. Volume 03: Neon is a portrait of the underground — the drivers, the builders, and the streets that only reveal themselves past midnight.
+        </p>
+        <p className="mb-4">
+          We trace the neon-lit corridors of Tokyo, the underpasses of Los Angeles, and the rain-slicked expressways of Geneva, finding in each a subculture defined not by daylight ambition but by nocturnal ritual.
+        </p>
+        <p>
+          Neon is about the machines that come alive in the dark, and the people who live to chase them.
+        </p>
+      </>
+    ),
+  },
+  "02": {
+    title: "Volume 02",
+    subtitle: "Static",
+    img: "https://images.unsplash.com/photo-1772877357487-ca7dc84cc04e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwYXJjaGl0ZWN0dXJhbCUyMG1vZGVybmlzdCUyMGJ1aWxkaW5nJTIwZmFjYWRlfGVufDF8fHx8MTc3ODA3MjAwNnww&ixlib=rb-4.1.0&q=80&w=1080",
+    cartIdPrefix: "vol-02",
+    readerPath: "/reader",
+    description: (
+      <>
+        <p className="mb-4">
+          In an era of constant motion, Volume 02: Static is a meditation on the art of pause. We examine what happens when the world's most kinetic objects are asked to stand still — and what they reveal when they do.
+        </p>
+        <p className="mb-4">
+          Featuring long-form portraiture of machines at rest, architectural studies of the garages that contain them, and essays from the craftspeople who care for them across decades.
+        </p>
+        <p>
+          Static is for those who understand that stillness is not the opposite of speed — it is its other face.
+        </p>
+      </>
+    ),
+  },
+  "01": {
+    title: "Volume 01",
+    subtitle: "Origin",
+    img: "https://images.unsplash.com/photo-1776231659026-8c3943737502?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3RvcnNwb3J0JTIwcmFjaW5nJTIwZGFyayUyMHNwZWVkJTIwbW90aW9uJTIwYmx1cnxlbnwxfHx8fDE3NzgwNzIwMDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    cartIdPrefix: "vol-01",
+    readerPath: "/reader",
+    description: (
+      <>
+        <p className="mb-4">
+          Before the icons, there were the originals. Volume 01: Origin traces the bloodlines of the machines that started it all — the first experiments, the forgotten prototypes, and the visionaries who believed that steel could move faster than thought.
+        </p>
+        <p className="mb-4">
+          This is the volume that began the Air &amp; Steel lineage: raw, unrefined, and essential. A record of the moments before the world knew what it was building.
+        </p>
+        <p>
+          Origin is where everything starts, and where everything returns.
+        </p>
+      </>
+    ),
+  },
+};
 
 const PREVIEW_IMAGES = [
   { num: "01", src: c1 },
@@ -36,11 +151,12 @@ const ARTICLE_IMAGES = [
 const SPEED_SWIPE_VELOCITY = 0.4;
 
 export function ReaderOverlay() {
-  const { isReaderOpen, closeReader, currentArticleId } = useReader();
+  const { isReaderOpen, closeReader, currentArticleId, currentVolumeId, currentVolumeOwned, volumeInitialView } = useReader();
   const { addToCart, cartItems } = useCart();
   const navigate = useNavigate();
   const articleData = currentArticleId ? ARTICLES[currentArticleId] ?? null : null;
   const activeImages = articleData ? ARTICLE_IMAGES : PREVIEW_IMAGES;
+  const meta = VOLUME_META[currentVolumeId ?? "1.0"] ?? VOLUME_META["1.0"];
   const [imgIdx, setImgIdx] = useState(0);
   const [view, setView] = useState<"preview" | "curation" | "acquire">("preview");
   const [selectedFormat, setSelectedFormat] = useState<"digital" | "print" | null>(null);
@@ -53,11 +169,11 @@ export function ReaderOverlay() {
   useEffect(() => {
     if (isReaderOpen) {
       setImgIdx(0);
-      setView("preview");
+      setView(volumeInitialView);
       setSelectedFormat(null);
       if (scrollRef.current) scrollRef.current.scrollTop = 0;
     }
-  }, [isReaderOpen]);
+  }, [isReaderOpen, volumeInitialView]);
 
   const goToImg = (idx: number) => {
     setImgIdx(Math.max(0, Math.min(activeImages.length - 1, idx)));
@@ -78,7 +194,8 @@ export function ReaderOverlay() {
 
     const direction = deltaX < 0 ? 1 : -1;
 
-    if (velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
+    // Articles advance one image at a time — speed-swipe (multi-jump) is volume-only.
+    if (!articleData && velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
       speedSwipeActive.current = true;
       triggerSpeedSwipe(direction);
     } else {
@@ -120,13 +237,13 @@ export function ReaderOverlay() {
             onClick={closeReader}
           />
 
-          {/* Full-screen panel */}
+          {/* Pop-up card panel */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ type: "spring", damping: 30, stiffness: 260 }}
-            className="absolute inset-x-0 inset-y-0 z-50 flex flex-col reader-overlay-bg overflow-hidden"
+            className="absolute inset-x-3 top-12 bottom-6 z-50 flex flex-col reader-overlay-bg overflow-hidden rounded-[28px] border border-white/12 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ── ARTICLE DETAIL VIEW ── */}
@@ -158,7 +275,6 @@ export function ReaderOverlay() {
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     </AnimatePresence>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
                   </div>
 
                   {/* × close */}
@@ -166,7 +282,7 @@ export function ReaderOverlay() {
                     onClick={closeReader}
                     whileTap={{ scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="absolute top-12 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
                   >
                     <X size={13} strokeWidth={2} />
                   </motion.button>
@@ -304,25 +420,15 @@ export function ReaderOverlay() {
                       />
                     </AnimatePresence>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
-
                     {/* × close button */}
                     <motion.button
                       onClick={closeReader}
                       whileTap={{ scale: 0.88 }}
                       transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                      className="absolute top-12 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
                     >
                       <X size={13} strokeWidth={2} />
                     </motion.button>
-
-                    {/* IMG counter */}
-                    <div
-                      className="absolute bottom-4 right-4 text-white/50 uppercase tracking-widest"
-                      style={{ fontSize: 9, letterSpacing: "0.2em" }}
-                    >
-                      {current.num}&nbsp;/&nbsp;{String(PREVIEW_IMAGES.length).padStart(2, "0")}
-                    </div>
                   </div>
 
                   {/* Bottom strip */}
@@ -362,32 +468,33 @@ export function ReaderOverlay() {
                   transition={{ type: "spring", damping: 32, stiffness: 280 }}
                   className="absolute inset-0 flex flex-col reader-overlay-bg"
                 >
-                  {/* Cover image */}
-                  <div className="shrink-0 relative" style={{ height: "42%" }}>
-                    <img
-                      src={coverImage}
-                      alt="Volume 1.0 Genesis"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 pointer-events-none" />
+                  {/* × close button — pinned to the card while content scrolls */}
+                  <motion.button
+                    onClick={closeReader}
+                    whileTap={{ scale: 0.88 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-20"
+                  >
+                    <X size={13} strokeWidth={2} />
+                  </motion.button>
 
-                    {/* × close button */}
-                    <motion.button
-                      onClick={closeReader}
-                      whileTap={{ scale: 0.88 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                      className="absolute top-12 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
-                    >
-                      <X size={13} strokeWidth={2} />
-                    </motion.button>
-                  </div>
-
-                  {/* Scrollable content */}
+                  {/* Scrollable content — cover image scrolls together with the text */}
                   <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto px-5 pt-6 pb-10"
+                    className="absolute inset-0 overflow-y-auto pb-10"
                     style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                   >
+                    {/* Cover image (part of the scroll) */}
+                    <div className="relative w-full" style={{ height: "42%" }}>
+                      <img
+                        src={meta.curationImg ?? meta.img}
+                        alt={`${meta.title} ${meta.subtitle}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Text content */}
+                    <div className="px-5 pt-6">
                     {/* Eyebrow */}
                     <div
                       className="text-[8px] text-white/40 uppercase tracking-[0.3em] mb-4"
@@ -405,7 +512,7 @@ export function ReaderOverlay() {
                         fontFamily: "'Space Grotesk', sans-serif",
                       }}
                     >
-                      Volume 1.0
+                      {meta.title}
                     </h1>
                     <h2
                       className="font-bold uppercase leading-none mb-4"
@@ -416,7 +523,7 @@ export function ReaderOverlay() {
                         color: "rgba(255,255,255,0.38)",
                       }}
                     >
-                      Genesis
+                      {meta.subtitle}
                     </h2>
 
                     {/* Divider */}
@@ -427,31 +534,23 @@ export function ReaderOverlay() {
                       className="text-white/55 leading-relaxed mb-7"
                       style={{ fontSize: 12, lineHeight: 1.75, fontFamily: "'Inter', sans-serif", fontWeight: 300 }}
                     >
-                      <p className="mb-4">
-                        In the inaugural volume of Air &amp; Steel Magazine, we take you to a pilgrimage through the formative milestones of the automotive timeline. Volume 1.0: Genesis is a curated journey through motoring history, from the singular moment of invention to the high-octane dawn of global motorsport.
-                      </p>
-                      <p className="mb-4">
-                        We explore the machines that defied convention: the outliers, the icons, and the experiments that paved the way for the legendary. Beyond rubber and steel, we document the human impulse — the unrelenting passion for speed and the pursuit of excellence that transformed the early automobile into a cultural legacy.
-                      </p>
-                      <p>
-                        Genesis is more than a tour of history, it is a testament to the vigor that took us from the first patent to the modern grid.
-                      </p>
+                      {meta.description}
                     </div>
 
                     {/* CTAs — conditional on ownership */}
                     {(() => {
                       const hasDigital =
-                        currentArticleId === "volume" ||
-                        cartItems.some((i) => i.id === "vol-1-digital");
+                        currentVolumeOwned ||
+                        cartItems.some((i) => i.id === `${meta.cartIdPrefix}-digital`);
 
                       if (hasDigital) {
                         return (
                           <div className="flex flex-col gap-3 mb-4">
-                            {/* Read Digital → Cockpit */}
+                            {/* Read Digital → reader */}
                             <motion.button
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => { closeReader(); navigate("/cockpit"); }}
-                              className="w-full py-4 flex items-center justify-center bg-white text-black uppercase tracking-widest"
+                              onClick={() => { closeReader(); navigate(meta.readerPath); }}
+                              className="w-full py-4 rounded-full flex items-center justify-center bg-white text-black uppercase tracking-widest"
                               style={{
                                 fontSize: 11,
                                 letterSpacing: "0.22em",
@@ -459,14 +558,14 @@ export function ReaderOverlay() {
                                 fontFamily: "'Space Grotesk', sans-serif",
                               }}
                             >
-                              Read Digital
+                              Read {meta.subtitle}
                             </motion.button>
 
                             {/* Acquire Print Edition */}
                             <motion.button
                               whileTap={{ scale: 0.98 }}
                               onClick={() => { setSelectedFormat("print"); setView("acquire"); }}
-                              className="w-full py-4 flex items-center justify-center border border-white/25 text-white/70 uppercase tracking-widest"
+                              className="w-full py-4 rounded-full flex items-center justify-center border border-white/25 text-white/70 uppercase tracking-widest"
                               style={{
                                 fontSize: 11,
                                 letterSpacing: "0.22em",
@@ -484,7 +583,7 @@ export function ReaderOverlay() {
                         <motion.button
                           whileTap={{ scale: 0.98 }}
                           onClick={() => { setSelectedFormat(null); setView("acquire"); }}
-                          className="w-full py-4 flex items-center justify-center bg-white text-black uppercase tracking-widest mb-4"
+                          className="w-full py-4 rounded-full flex items-center justify-center bg-white text-black uppercase tracking-widest mb-4"
                           style={{
                             fontSize: 11,
                             letterSpacing: "0.22em",
@@ -492,7 +591,7 @@ export function ReaderOverlay() {
                             fontFamily: "'Space Grotesk', sans-serif",
                           }}
                         >
-                          Acquire Volume 1.0
+                          Acquire {meta.title}
                         </motion.button>
                       );
                     })()}
@@ -506,6 +605,7 @@ export function ReaderOverlay() {
                     >
                       ← Back to Preview
                     </motion.button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -524,7 +624,7 @@ export function ReaderOverlay() {
                     onClick={closeReader}
                     whileTap={{ scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="absolute top-12 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-white/8 border border-white/12 text-white/60 z-10"
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/8 border border-white/12 text-white/60 z-10"
                   >
                     <X size={13} strokeWidth={2} />
                   </motion.button>
@@ -541,7 +641,7 @@ export function ReaderOverlay() {
                       className="text-white font-bold leading-none mb-1"
                       style={{ fontSize: 28, fontFamily: "'Space Grotesk', sans-serif" }}
                     >
-                      Volume 1.0
+                      {meta.title}
                     </h1>
                     <div
                       className="text-white/30 uppercase"
@@ -555,8 +655,8 @@ export function ReaderOverlay() {
                   <div className="shrink-0 px-4 flex gap-3">
                     {(() => {
                       const hasDigital =
-                        currentArticleId === "volume" ||
-                        cartItems.some((i) => i.id === "vol-1-digital");
+                        currentVolumeOwned ||
+                        cartItems.some((i) => i.id === `${meta.cartIdPrefix}-digital`);
                       return ([
                         {
                           key: "digital" as const,
@@ -647,12 +747,12 @@ export function ReaderOverlay() {
                       onClick={() => {
                         if (!selectedFormat) return;
                         addToCart({
-                          id: `vol-1-${selectedFormat}`,
-                          title: "Genesis",
-                          vol: "Vol 1.0",
+                          id: `${meta.cartIdPrefix}-${selectedFormat}`,
+                          title: meta.subtitle,
+                          vol: meta.title,
                           format: selectedFormat === "digital" ? "Digital" : "Print",
                           price: selectedFormat === "digital" ? 499 : 1999,
-                          img: coverImage,
+                          img: meta.img,
                         });
                         closeReader();
                         navigate("/cart");

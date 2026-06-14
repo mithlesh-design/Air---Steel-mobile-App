@@ -48,7 +48,6 @@ export function Signup() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,13 +105,6 @@ export function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <FloatingLabelInput
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
           {/* Member access type */}
           <div className="pt-2">
             <div className="text-[9px] text-white/30 uppercase tracking-widest mb-3">

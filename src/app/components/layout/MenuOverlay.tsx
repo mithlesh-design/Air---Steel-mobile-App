@@ -26,11 +26,11 @@ const SEARCHABLE: SearchResult[] = [
   { id: "03",  label: "Neon",    sublabel: "Vol 03", type: "volume", path: "/archives" },
   { id: "02",  label: "Static",  sublabel: "Vol 02", type: "volume", path: "/archives" },
   { id: "01",  label: "Origin",  sublabel: "Vol 01", type: "volume", path: "/archives" },
-  { id: "night-runners",           label: "Night Runners",              sublabel: "Article · Tokyo",      type: "article", path: "/archives" },
-  { id: "analogue",                label: "Analogue",                   sublabel: "Article · Los Angeles", type: "article", path: "/archives" },
-  { id: "the-silent-mile",         label: "The Silent Mile",            sublabel: "Article · Geneva",     type: "article", path: "/archives" },
-  { id: "carbon-ritual",           label: "Carbon Ritual",              sublabel: "Article · London",     type: "article", path: "/archives" },
-  { id: "architecture-of-silence", label: "The Architecture of Silence",sublabel: "Article · Cover Story",type: "article", path: "/archives" },
+  { id: "night-runners",           label: "Night Runners",              sublabel: "Article · Tokyo",       type: "article", path: "/articles" },
+  { id: "analogue",                label: "Analogue",                   sublabel: "Article · Los Angeles", type: "article", path: "/articles" },
+  { id: "the-silent-mile",         label: "The Silent Mile",            sublabel: "Article · Geneva",      type: "article", path: "/articles" },
+  { id: "carbon-ritual",           label: "Carbon Ritual",              sublabel: "Article · London",      type: "article", path: "/articles" },
+  { id: "architecture-of-silence", label: "The Architecture of Silence",sublabel: "Article · Cover Story", type: "article", path: "/articles" },
 ];
 
 export function MenuOverlay() {
@@ -64,7 +64,7 @@ export function MenuOverlay() {
     closeMenu();
     setSearch("");
     if (item.type === "article") {
-      openReader(item.id);
+      navigate("/articles", { state: { highlight: item.id } });
     } else {
       navigate("/archives", { state: { highlight: item.id } });
     }
@@ -243,7 +243,7 @@ export function MenuOverlay() {
                     <div className="grid grid-cols-2 gap-2">
                       {/* Bookmarks */}
                       <motion.button
-                        onClick={() => { closeMenu(); setSearch(""); navigate("/cockpit", { state: { scrollTo: "bookmarks" } }); }}
+                        onClick={() => { closeMenu(); setSearch(""); navigate("/bookmarks"); }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         className="bg-[#141414] border-2 border-[#222] p-4 rounded-2xl text-left flex flex-col gap-2"

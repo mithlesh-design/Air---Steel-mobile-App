@@ -47,18 +47,7 @@ export function Splash() {
           />
         </motion.div>
 
-        {/* Edition tag */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="flex flex-col items-center gap-2"
-        >
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-white/25 text-[8px] tracking-[0.4em] uppercase">
-            Est. IN · 2026.3
-          </div>
-        </motion.div>
+
       </motion.div>
 
       {/* Loading indicator */}

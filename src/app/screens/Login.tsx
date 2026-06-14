@@ -50,7 +50,7 @@ export function Login() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,10 +143,10 @@ export function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <FloatingLabelInput
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            label="OTP Code"
+            type="text"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
           />
 
           <div className="pt-6 space-y-4">
@@ -157,7 +157,7 @@ export function Login() {
               className="w-full bg-white text-[#0A0A0A] rounded-full py-4 text-[11px] font-bold tracking-[0.18em] uppercase shadow-lg flex items-center justify-center"
               style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
             >
-              Enter
+              DISPATCH CODE
             </motion.button>
 
             <motion.button
@@ -173,21 +173,6 @@ export function Login() {
           </div>
         </motion.form>
 
-        {/* Forgot link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-8 text-center"
-        >
-          <motion.button
-            whileTap={{ scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="text-[9px] text-white/20 uppercase tracking-widest"
-          >
-            Forgot access credentials
-          </motion.button>
-        </motion.div>
       </div>
 
       {/* Bottom brand mark */}

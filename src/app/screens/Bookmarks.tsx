@@ -92,9 +92,8 @@ export function Bookmarks() {
                   <img
                     src={bm.img}
                     alt={bm.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-70"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 </div>
 
                 {/* Content */}

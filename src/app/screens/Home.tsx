@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
 import { useNavigate } from "react-router";
 import { useReader } from "../context/ReaderContext";
+import { isVolumeOwned } from "../data/ownership";
 import { ArrowRight } from "lucide-react";
 import LATEST_ISSUE_IMAGE from "../../imports/image-2.png";
 
@@ -44,7 +45,7 @@ function getGreeting(): string {
 
 export function Home() {
   const navigate = useNavigate();
-  const { openReader } = useReader();
+  const { openReader, openVolume } = useReader();
   const greeting = getGreeting();
 
   return (
@@ -114,14 +115,13 @@ export function Home() {
             style={{ aspectRatio: "3/4" }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={() => openReader("volume")}
+            onClick={() => openVolume("1.0", isVolumeOwned("1.0"))}
           >
             <img
               src={LATEST_ISSUE_IMAGE}
               alt="Volume 1.0 Genesis"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </motion.div>
 
           {/* Story text below card */}
@@ -201,17 +201,16 @@ export function Home() {
                   alt={card.title}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <div
-                    className="text-[8px] uppercase tracking-[0.22em] mb-1"
-                    style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, color: "rgba(255,255,255,0.45)" }}
+                    className="text-[8px] uppercase tracking-[0.22em] mb-1 text-[#FFFFFF]/70 drop-shadow-md"
+                    style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }}
                   >
                     {card.city}
                   </div>
                   <div
-                    className="text-[13px] uppercase leading-tight tracking-[0.01em]"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#ffffff" }}
+                    className="text-[13px] uppercase leading-tight tracking-[0.01em] text-[#FFFFFF] drop-shadow-md"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
                   >
                     {card.title}
                   </div>
@@ -256,14 +255,13 @@ export function Home() {
             style={{ aspectRatio: "3/4" }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={() => openReader("volume")}
+            onClick={() => openVolume("1.0", isVolumeOwned("1.0"))}
           >
             <img
               src={LATEST_ISSUE_IMAGE}
               alt="Volume 1.0 Genesis"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </motion.div>
 
           <motion.div variants={itemVariants}>
@@ -283,7 +281,7 @@ export function Home() {
               className="text-[11px] text-white/45 leading-[1.65]"
               style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300 }}
             >
-              The origin. Where steel meets vision and the first signal is sent into the world.
+              The Inaugural Dispatch. 150+ pages of immersive storytelling, curated from renowned as well as overlooked peripheries of automotive culture. From the solitude of Alpine passes to the neon-drenched depths of Tokyo's underpasses.<br /><br />Substantial in weight, permanent in nature, and crafted with intent.
             </p>
           </motion.div>
         </motion.div>
