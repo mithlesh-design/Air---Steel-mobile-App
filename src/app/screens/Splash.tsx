@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
+import { useTheme } from "../context/ThemeContext";
 import imgLogo from "../../imports/AllScreens/799a4c4258f135fe583a1c66fdc10b8fd21a5591.png";
+import imgLogoLight from "../../imports/Black-text.png";
 
 export function Splash() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -37,13 +40,13 @@ export function Splash() {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-          className="w-[220px] h-[72px] relative"
+          className="w-[300px] h-[98px] relative"
         >
           <img
-            src={imgLogo}
+            src={theme === "light" ? imgLogoLight : imgLogo}
             alt="Air & Steel"
             className="w-full h-full object-contain"
-            style={{ filter: "brightness(1.1)" }}
+            style={theme === "light" ? undefined : { filter: "brightness(1.1)" }}
           />
         </motion.div>
 
