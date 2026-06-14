@@ -282,7 +282,7 @@ export function ReaderOverlay() {
                     onClick={closeReader}
                     whileTap={{ scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full media-control flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
                   >
                     <X size={13} strokeWidth={2} />
                   </motion.button>
@@ -425,7 +425,7 @@ export function ReaderOverlay() {
                       onClick={closeReader}
                       whileTap={{ scale: 0.88 }}
                       transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full media-control flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-10"
                     >
                       <X size={13} strokeWidth={2} />
                     </motion.button>
@@ -473,7 +473,7 @@ export function ReaderOverlay() {
                     onClick={closeReader}
                     whileTap={{ scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-20"
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full media-control flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-white/70 z-20"
                   >
                     <X size={13} strokeWidth={2} />
                   </motion.button>

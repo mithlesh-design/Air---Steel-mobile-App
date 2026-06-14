@@ -214,3 +214,31 @@ html.light .bg-white\/4          { background-color: rgba(0,0,0,0.025) !importan
 html.light .border-white\/8      { border-color: rgba(0,0,0,0.05)  !important; }
 html.light .border-white\/22     { border-color: rgba(0,0,0,0.13)  !important; }
 html.light .bg-\[\#141414\]\/40 { background-color: rgba(255,255,255,0.55) !important; }
+
+/* ── 20. Coming Soon hero — sits on a dark photo, so keep its light
+   text + glass controls in light mode (don't invert to dark-on-dark) ── */
+html.light .cs-card .text-white      { color: #FFFFFF !important; }
+html.light .cs-card .text-white\/85  { color: rgba(255,255,255,0.85) !important; }
+html.light .cs-card .text-white\/65  { color: rgba(255,255,255,0.72) !important; }
+html.light .cs-card .text-white\/55  { color: rgba(255,255,255,0.62) !important; }
+html.light .cs-card .text-white\/45  { color: rgba(255,255,255,0.54) !important; }
+html.light .cs-card .text-white\/40  { color: rgba(255,255,255,0.48) !important; }
+html.light .cs-card .text-white\/35  { color: rgba(255,255,255,0.42) !important; }
+html.light .cs-card .bg-white\/\[0\.08\] { background-color: rgba(255,255,255,0.12) !important; }
+html.light .cs-card .bg-white\/\[0\.06\] { background-color: rgba(255,255,255,0.10) !important; }
+html.light .cs-card .focus\:bg-white\/\[0\.12\]:focus { background-color: rgba(255,255,255,0.16) !important; }
+html.light .cs-card .border-white\/15 { border-color: rgba(255,255,255,0.22) !important; }
+html.light .cs-card .border-white\/10 { border-color: rgba(255,255,255,0.16) !important; }
+/* Keep the email placeholder legible on the dark photo */
+html.light .cs-card input::placeholder { color: rgba(255,255,255,0.45) !important; }
+/* Give the dark card a touch more edge definition against the paper background */
+html.light .cs-card.border-\[\#1E1E1E\] { border-color: rgba(0,0,0,0.12) !important; }
+
+/* ── 21. Floating controls over photos / PDF media — keep a light icon and
+   dark scrim in BOTH themes (don't invert to black-on-dark in light mode) ── */
+html.light .media-control                  { color: rgba(255,255,255,0.90) !important; }
+html.light .media-control .text-white\/80,
+html.light .media-control .text-white\/70,
+html.light .media-control .text-white\/60  { color: rgba(255,255,255,0.90) !important; }
+html.light .media-control.bg-black\/50     { background-color: rgba(0,0,0,0.50) !important; }
+html.light .media-control.border-white\/15 { border-color: rgba(255,255,255,0.25) !important; }

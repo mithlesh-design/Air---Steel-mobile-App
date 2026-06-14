@@ -405,7 +405,7 @@ export function PdfReader() {
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={collapse}
-              className="pointer-events-auto w-9 h-9 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center"
+              className="pointer-events-auto w-9 h-9 rounded-full media-control bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center"
             >
               <Minimize2 size={14} className="text-white/70" />
             </motion.button>

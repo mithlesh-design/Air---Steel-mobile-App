@@ -180,7 +180,7 @@ export function Archives() {
           className="px-6 mb-10"
         >
           <div
-            className="relative rounded-2xl border-2 border-[#1E1E1E] overflow-hidden"
+            className="cs-card relative rounded-2xl border-2 border-[#1E1E1E] overflow-hidden"
             style={{ aspectRatio: "4/5" }}
           >
             <img

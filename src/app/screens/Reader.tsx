@@ -492,7 +492,7 @@ export function Reader() {
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setIsExpanded(false)}
-                className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center"
+                className="w-9 h-9 rounded-full media-control bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center"
               >
                 <Minimize2 size={13} className="text-white/80" />
               </motion.button>
