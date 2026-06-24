@@ -162,6 +162,8 @@ export function ReaderOverlay() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const touchStartX = useRef(0);
+  const touchStartTime = useRef(0);
+  const swipeTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isReaderOpen) {
@@ -178,12 +180,47 @@ export function ReaderOverlay() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+    if (swipeTimeout.current) clearTimeout(swipeTimeout.current);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEndArticle = (e: React.TouchEvent) => {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
     if (Math.abs(deltaX) < 15) return;
     goToImg(imgIdx + (deltaX < 0 ? 1 : -1));
+  };
+
+  const handleTouchEndPreview = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const timeDelta = Date.now() - touchStartTime.current;
+    if (Math.abs(deltaX) < 15) return;
+
+    const velocity = Math.abs(deltaX) / timeDelta;
+    const isLongSwipe = Math.abs(deltaX) > 150 || velocity > 0.8;
+
+    if (isLongSwipe) {
+      const direction = deltaX < 0 ? 1 : -1;
+      let cardsSwiped = 0;
+      let speed = 50;
+
+      const swipeNext = () => {
+        setImgIdx(prev => {
+          const next = prev + direction;
+          if (next >= 0 && next < activeImages.length) {
+            cardsSwiped++;
+            if (cardsSwiped < 4) {
+              speed += 40;
+              swipeTimeout.current = setTimeout(swipeNext, speed);
+            }
+            return next;
+          }
+          return prev;
+        });
+      };
+      swipeTimeout.current = setTimeout(swipeNext, speed);
+    } else {
+      goToImg(imgIdx + (deltaX < 0 ? 1 : -1));
+    }
   };
 
   const current = activeImages[imgIdx];
@@ -220,7 +257,7 @@ export function ReaderOverlay() {
                     className="absolute inset-0 reader-img-bg"
                     style={{ touchAction: "none" }}
                     onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
+                    onTouchEnd={handleTouchEndArticle}
                     onClick={(e) => {
                       const { clientX, currentTarget } = e;
                       const { left, width } = currentTarget.getBoundingClientRect();
@@ -358,7 +395,7 @@ export function ReaderOverlay() {
                   <div
                     className="flex-1 relative overflow-hidden reader-img-bg"
                     onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
+                    onTouchEnd={handleTouchEndPreview}
                     onClick={(e) => {
                       const { clientX, currentTarget } = e;
                       const { left, width } = currentTarget.getBoundingClientRect();

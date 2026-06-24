@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { X, Bookmark, Maximize2, Minimize2, AlignJustify, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -56,14 +56,13 @@ export function PdfReader() {
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [containerWidth, setContainerWidth] = useState(340);
   const [showContents, setShowContents] = useState(false);
+  const [direction, setDirection] = useState(0);
+  const [isSpeedSwiping, setIsSpeedSwiping] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
-
-  // Finger-tracking pager (normal mode)
-  const x = useMotionValue(0);
 
   // Track container width so Page fills it correctly in both normal + expanded modes
   useEffect(() => {
@@ -88,36 +87,16 @@ export function PdfReader() {
   };
 
   const goNext = useCallback(() => {
-    if (pageIndex < numPages - 1) setPageIndex((i) => i + 1);
+    if (pageIndex < numPages - 1) { setDirection(1); setPageIndex((i) => i + 1); }
   }, [pageIndex, numPages]);
 
   const goPrev = useCallback(() => {
-    if (pageIndex > 0) setPageIndex((i) => i - 1);
+    if (pageIndex > 0) { setDirection(-1); setPageIndex((i) => i - 1); }
   }, [pageIndex]);
 
-  // ── Finger-tracking pager: slide the track to the neighbour, then recentre ──
-  const snapSpring = { type: "spring", stiffness: 300, damping: 30 } as const;
-
-  const commit = useCallback((dir: number) => {
-    const target = dir > 0 ? -containerWidth : containerWidth;
-    animate(x, target, snapSpring).then(() => {
-      setPageIndex((i) => Math.max(0, Math.min(numPages - 1, i + dir)));
-      x.set(0);
-    });
-  }, [containerWidth, numPages, x]);
-
-
-  const handleDragEnd = useCallback((info: { offset: { x: number }; velocity: { x: number } }) => {
-    const { offset, velocity } = info;
-    const hasNext = pageIndex < numPages - 1;
-    const hasPrev = pageIndex > 0;
-    const threshold = containerWidth * 0.20;
-    if ((offset.x < -threshold || velocity.x < -200) && hasNext) commit(1);
-    else if ((offset.x > threshold || velocity.x > 200) && hasPrev) commit(-1);
-    else animate(x, 0, snapSpring);
-  }, [pageIndex, numPages, containerWidth, commit, x]);
-
   const triggerSpeedSwipe = useCallback((dir: number) => {
+    setIsSpeedSwiping(true);
+    setDirection(dir);
     const delays = [120, 120, 180, 260, 380];
     let current = pageIndex;
     delays.forEach((delay, i) => {
@@ -125,7 +104,7 @@ export function PdfReader() {
       setTimeout(() => {
         current = Math.max(0, Math.min(numPages - 1, current + dir));
         setPageIndex(current);
-        if (i === delays.length - 1) speedSwipeActive.current = false;
+        if (i === delays.length - 1) { speedSwipeActive.current = false; setIsSpeedSwiping(false); }
       }, acc + delay);
     });
   }, [pageIndex, numPages]);
@@ -291,61 +270,54 @@ export function PdfReader() {
           </div>
         )}
 
-        {/* ── NORMAL: finger-tracking page pager (cards follow the swipe) ── */}
+        {/* ── NORMAL: touch-driven page transitions ── */}
         {pdfLoaded && !pdfError && !isExpanded && (
           <div className="flex-1 flex items-center justify-center px-4 overflow-hidden min-h-0">
             <div
               ref={containerRef}
               className="relative w-full h-full overflow-hidden"
               style={{ touchAction: "none" }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
-              <motion.div
-                className="absolute inset-0 cursor-grab active:cursor-grabbing"
-                style={{ x }}
-                drag="x"
-                dragElastic={0.12}
-                dragConstraints={{
-                  left: pageIndex < numPages - 1 ? -containerWidth : 0,
-                  right: pageIndex > 0 ? containerWidth : 0,
-                }}
-                onDragEnd={(_e, info) => handleDragEnd(info)}
-              >
-                {[pageIndex - 1, pageIndex, pageIndex + 1].map((p) => {
-                  if (p < 0 || p >= numPages) return null;
-                  return (
-                    <div
-                      key={p}
-                      className="absolute top-0 h-full flex items-center justify-center"
-                      style={{
-                        width: containerWidth,
-                        transform: `translateX(${(p - pageIndex) * containerWidth}px)`,
-                      }}
-                    >
-                      <div
-                        className="rounded-[22px] overflow-hidden pointer-events-none"
-                        style={{
-                          boxShadow:
-                            "0 0 0 1px rgba(255,255,255,0.07), 0 30px 80px -10px rgba(0,0,0,0.95), 0 0 60px -20px rgba(255,255,255,0.04)",
-                        }}
-                      >
-                        <Page
-                          pageNumber={p + 1}
-                          width={cardWidth}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                          loading={
-                            <div
-                              className="bg-[#111] animate-pulse"
-                              style={{ width: cardWidth, height: Math.floor(cardWidth * 1.41) }}
-                            />
-                          }
-                          className="block"
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={pageIndex}
+                  custom={direction}
+                  variants={{
+                    enter: (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 0 }),
+                    center: { x: 0, opacity: 1 },
+                    exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 0 }),
+                  }}
+                  initial={isSpeedSwiping ? false : "enter"}
+                  animate="center"
+                  exit={isSpeedSwiping ? { opacity: 0 } : "exit"}
+                  transition={isSpeedSwiping ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <div
+                    className="rounded-[22px] overflow-hidden pointer-events-none"
+                    style={{
+                      boxShadow:
+                        "0 0 0 1px rgba(255,255,255,0.07), 0 30px 80px -10px rgba(0,0,0,0.95), 0 0 60px -20px rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    <Page
+                      pageNumber={pageIndex + 1}
+                      width={cardWidth}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      loading={
+                        <div
+                          className="bg-[#111] animate-pulse"
+                          style={{ width: cardWidth, height: Math.floor(cardWidth * 1.41) }}
                         />
-                      </div>
-                    </div>
-                  );
-                })}
-              </motion.div>
+                      }
+                      className="block"
+                    />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         )}
