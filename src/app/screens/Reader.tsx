@@ -82,8 +82,10 @@ export function Reader() {
     }
   }, [pageIndex]);
 
-  const LONG_SWIPE_THRESHOLD = 0.30; // fraction of screen width
-  const touchStartX = useRef(0);
+  const LONG_SWIPE_THRESHOLD = 0.40; // fraction of screen width — must be a deliberate drag
+  const FAST_FLICK_VELOCITY  = 0.45; // px/ms — above this it's a quick flip, not a drag
+  const touchStartX    = useRef(0);
+  const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
 
   const triggerSpeedSwipe = useCallback((dir: number, swipeDistance: number) => {
@@ -118,18 +120,22 @@ export function Reader() {
   }, [pageIndex, isExpanded]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    touchStartX.current   = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
     speedSwipeActive.current = false;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaX   = e.changedTouches[0].clientX - touchStartX.current;
     const absDelta = Math.abs(deltaX);
     if (absDelta < 15) return;
     e.preventDefault(); // suppress synthetic click on tap-zone buttons
-    const dir = deltaX < 0 ? 1 : -1;
-    const isLongSwipe = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD;
-    if (!isExpanded && isLongSwipe && !speedSwipeActive.current) {
+    const dir      = deltaX < 0 ? 1 : -1;
+    const velocity = absDelta / Math.max(Date.now() - touchStartTime.current, 1);
+    // Speed swipe only for a slow deliberate drag — fast flicks always flip one page
+    const isLongSlowDrag = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD
+                        && velocity < FAST_FLICK_VELOCITY;
+    if (!isExpanded && isLongSlowDrag && !speedSwipeActive.current) {
       speedSwipeActive.current = true;
       triggerSpeedSwipe(dir, absDelta);
     } else {

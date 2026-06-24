@@ -64,7 +64,6 @@ export function PdfReader() {
 
   // Finger-tracking pager (normal mode)
   const x = useMotionValue(0);
-  const draggingRef = useRef(false);
 
   // Track container width so Page fills it correctly in both normal + expanded modes
   useEffect(() => {
@@ -107,20 +106,16 @@ export function PdfReader() {
     });
   }, [containerWidth, numPages, x]);
 
-  const paginate = useCallback((dir: number) => {
-    if (dir > 0 && pageIndex < numPages - 1) commit(1);
-    else if (dir < 0 && pageIndex > 0) commit(-1);
-  }, [pageIndex, numPages, commit]);
 
-  const handleDragEnd = (info: { offset: { x: number }; velocity: { x: number } }) => {
+  const handleDragEnd = useCallback((info: { offset: { x: number }; velocity: { x: number } }) => {
     const { offset, velocity } = info;
     const hasNext = pageIndex < numPages - 1;
     const hasPrev = pageIndex > 0;
-    const threshold = containerWidth * 0.25;
-    if ((offset.x < -threshold || velocity.x < -500) && hasNext) commit(1);
-    else if ((offset.x > threshold || velocity.x > 500) && hasPrev) commit(-1);
+    const threshold = containerWidth * 0.20;
+    if ((offset.x < -threshold || velocity.x < -200) && hasNext) commit(1);
+    else if ((offset.x > threshold || velocity.x > 200) && hasPrev) commit(-1);
     else animate(x, 0, snapSpring);
-  };
+  }, [pageIndex, numPages, containerWidth, commit, x]);
 
   const triggerSpeedSwipe = useCallback((dir: number) => {
     const delays = [120, 120, 180, 260, 380];
@@ -302,7 +297,7 @@ export function PdfReader() {
             <div
               ref={containerRef}
               className="relative w-full h-full overflow-hidden"
-              style={{ touchAction: "pan-y" }}
+              style={{ touchAction: "none" }}
             >
               <motion.div
                 className="absolute inset-0 cursor-grab active:cursor-grabbing"
@@ -313,14 +308,7 @@ export function PdfReader() {
                   left: pageIndex < numPages - 1 ? -containerWidth : 0,
                   right: pageIndex > 0 ? containerWidth : 0,
                 }}
-                onPointerDown={() => { draggingRef.current = false; }}
-                onDragStart={() => { draggingRef.current = true; }}
                 onDragEnd={(_e, info) => handleDragEnd(info)}
-                onClick={(e) => {
-                  if (draggingRef.current) return;
-                  const { left, width } = e.currentTarget.getBoundingClientRect();
-                  paginate(e.clientX - left < width / 2 ? -1 : 1);
-                }}
               >
                 {[pageIndex - 1, pageIndex, pageIndex + 1].map((p) => {
                   if (p < 0 || p >= numPages) return null;
