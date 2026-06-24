@@ -212,16 +212,16 @@ export function Reader() {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <AnimatePresence mode={isSpeedSwiping ? "sync" : "wait"} custom={direction}>
+          <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={pageIndex}
               custom={direction}
               variants={pageVariants}
-              initial="enter"
+              initial={isSpeedSwiping ? false : "enter"}
               animate="center"
-              exit="exit"
+              exit={isSpeedSwiping ? { opacity: 0 } : "exit"}
               transition={isSpeedSwiping
-                ? { duration: 0.13, ease: [0.22, 1, 0.36, 1] }
+                ? { duration: 0 }
                 : { type: "spring", stiffness: 300, damping: 30 }}
               className="relative w-full"
               style={{ aspectRatio: "3/4.2" }}
