@@ -9,7 +9,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 const PDF_URL = "/vol-1-genesis.pdf";
-const SPEED_SWIPE_VELOCITY = 0.4;
+const LONG_SWIPE_THRESHOLD = 0.38;
+const FAST_FLICK_VELOCITY  = 0.50;
 
 const PDF_CHAPTERS = [
   {
@@ -94,18 +95,30 @@ export function PdfReader() {
     if (pageIndex > 0) { setDirection(-1); setPageIndex((i) => i - 1); }
   }, [pageIndex]);
 
-  const triggerSpeedSwipe = useCallback((dir: number) => {
+  const triggerSpeedSwipe = useCallback((dir: number, swipeDistance: number) => {
     setIsSpeedSwiping(true);
     setDirection(dir);
-    const delays = [120, 120, 180, 260, 380];
+
+    const screenFraction  = Math.min(swipeDistance / window.innerWidth, 1.0);
+    const initialInterval = Math.round(85 - screenFraction * 40);
+    const decayFactor     = 1.35;
+    const maxInterval     = 380;
+
+    const fireTimes: number[] = [];
+    let elapsed = 0, interval = initialInterval;
+    while (interval < maxInterval) {
+      elapsed += interval;
+      fireTimes.push(Math.round(elapsed));
+      interval = Math.round(interval * decayFactor);
+    }
+
     let current = pageIndex;
-    delays.forEach((delay, i) => {
-      const acc = delays.slice(0, i).reduce((a, b) => a + b, 0);
+    fireTimes.forEach((t, i) => {
       setTimeout(() => {
         current = Math.max(0, Math.min(numPages - 1, current + dir));
         setPageIndex(current);
-        if (i === delays.length - 1) { speedSwipeActive.current = false; setIsSpeedSwiping(false); }
-      }, acc + delay);
+        if (i === fireTimes.length - 1) { speedSwipeActive.current = false; setIsSpeedSwiping(false); }
+      }, t);
     });
   }, [pageIndex, numPages]);
 
@@ -119,13 +132,16 @@ export function PdfReader() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (zoomLevel > 1) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const absDelta = Math.abs(deltaX);
     const deltaT = Date.now() - touchStartTime.current;
-    const velocity = Math.abs(deltaX) / deltaT;
-    if (Math.abs(deltaX) < 15) return;
+    const velocity = absDelta / Math.max(deltaT, 1);
+    if (absDelta < 15) return;
     const dir = deltaX < 0 ? 1 : -1;
-    if (velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
+    const isLongSlowDrag = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD
+                        && velocity < FAST_FLICK_VELOCITY;
+    if (isLongSlowDrag && !speedSwipeActive.current) {
       speedSwipeActive.current = true;
-      triggerSpeedSwipe(dir);
+      triggerSpeedSwipe(dir, absDelta);
     } else {
       dir === 1 ? goNext() : goPrev();
     }
@@ -280,19 +296,19 @@ export function PdfReader() {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
-              <AnimatePresence mode="wait" custom={direction}>
+              <AnimatePresence custom={direction}>
                 <motion.div
                   key={pageIndex}
                   custom={direction}
                   variants={{
-                    enter: (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 0 }),
-                    center: { x: 0, opacity: 1 },
-                    exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 0 }),
+                    enter: (d: number) => ({ x: d > 0 ? "100%" : "-100%" }),
+                    center: { x: 0 },
+                    exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%" }),
                   }}
                   initial={isSpeedSwiping ? false : "enter"}
                   animate="center"
                   exit={isSpeedSwiping ? { opacity: 0 } : "exit"}
-                  transition={isSpeedSwiping ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
+                  transition={isSpeedSwiping ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 38 }}
                   className="absolute inset-0 flex items-center justify-center"
                 >
                   <div
