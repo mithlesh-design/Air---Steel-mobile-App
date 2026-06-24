@@ -274,7 +274,7 @@ export function Archives() {
                     <div className="relative">
                       <Mail
                         size={14}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
                       />
                       <input
                         type="email"
@@ -284,7 +284,7 @@ export function Archives() {
                         value={notifyEmail}
                         onChange={(e) => setNotifyEmail(e.target.value)}
                         placeholder="your@email.com"
-                        className="w-full min-h-[48px] rounded-full bg-white/[0.08] backdrop-blur-md border border-white/15 pl-11 pr-5 text-[13px] text-white placeholder:text-white/40 outline-none transition-colors duration-200 focus:border-brand-orange/60 focus:bg-white/[0.12]"
+                        className="w-full min-h-[48px] rounded-full bg-white/[0.18] backdrop-blur-md border border-white/35 pl-11 pr-5 text-[13px] text-white placeholder:text-white/65 outline-none transition-colors duration-200 focus:border-brand-orange/60 focus:bg-white/[0.22]"
                         style={{ fontFamily: "'Inter', sans-serif" }}
                       />
                     </div>
@@ -295,7 +295,7 @@ export function Archives() {
                       disabled={!notifyEmail.trim()}
                       whileTap={notifyEmail.trim() ? { scale: 0.98 } : {}}
                       aria-label="Notify me when Volume 1.1 launches"
-                      className="w-full min-h-[48px] rounded-full flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.22em] transition-all duration-200 disabled:opacity-40"
+                      className="w-full min-h-[48px] rounded-full flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.22em] transition-all duration-200 disabled:opacity-60"
                       style={{
                         fontFamily: "'Space Grotesk', sans-serif",
                         fontWeight: 600,

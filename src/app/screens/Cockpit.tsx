@@ -93,6 +93,7 @@ export function Cockpit() {
   const [readingTime] = useState(getStoredReadingTime);
   const bookmarksRef = useRef<HTMLDivElement>(null);
   const libraryRef = useRef<HTMLDivElement>(null);
+  const volumeCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [highlightedLibraryVol, setHighlightedLibraryVol] = useState<string | null>(null);
 
@@ -281,6 +282,7 @@ export function Cockpit() {
             {OWNED_VOLUMES.map((item) => (
               <motion.div
                 key={item.label}
+                ref={(el) => { volumeCardRefs.current[item.num] = el; }}
                 variants={itemVariants}
                 className="min-w-[185px] space-y-3 shrink-0 cursor-pointer"
                 whileTap={{ scale: 0.96 }}
@@ -498,6 +500,9 @@ export function Cockpit() {
                         if (slot.owned) {
                           libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                           setHighlightedLibraryVol(slot.num);
+                          setTimeout(() => {
+                            volumeCardRefs.current[slot.num]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+                          }, 350);
                           setTimeout(() => setHighlightedLibraryVol(null), 2500);
                         } else {
                           navigate("/archives", { state: { highlight: slot.num } });

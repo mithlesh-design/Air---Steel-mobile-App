@@ -105,27 +105,6 @@ export function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          {/* Member access type */}
-          <div className="pt-2">
-            <div className="text-[9px] text-white/30 uppercase tracking-widest mb-3">
-              Membership tier
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {["Digital", "Print + Digital"].map((tier, i) => (
-                <button
-                  key={tier}
-                  type="button"
-                  className={`w-full py-3 rounded-xl border text-[9px] uppercase tracking-wider transition-all duration-200 flex items-center justify-center ${
-                    i === 0
-                      ? "border-white bg-white text-[#0A0A0A] font-bold"
-                      : "border-[#2A2A2A] text-white/40 hover:border-white/20 hover:text-white/60"
-                  }`}
-                >
-                  {tier}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="pt-4 space-y-4">
             <motion.button

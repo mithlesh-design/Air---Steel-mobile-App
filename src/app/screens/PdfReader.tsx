@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
-import { X, Bookmark, Maximize2, Minimize2, RotateCcw, AlignJustify } from "lucide-react";
+import { X, Bookmark, Maximize2, Minimize2, AlignJustify, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -10,6 +10,39 @@ pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 const PDF_URL = "/vol-1-genesis.pdf";
 const SPEED_SWIPE_VELOCITY = 0.4;
+
+const PDF_CHAPTERS = [
+  {
+    num: 1,
+    section: "Prologue",
+    headline: "The Genesis\nStory",
+    image: "https://images.unsplash.com/photo-1776231659026-8c3943737502?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    num: 8,
+    section: "Feature",
+    headline: "The First\nMachine",
+    image: "https://images.unsplash.com/photo-1769641241031-3d4266780e17?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    num: 16,
+    section: "Craft",
+    headline: "Steel &\nSilence",
+    image: "https://images.unsplash.com/photo-1768334431181-a9e82f158eaf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    num: 24,
+    section: "Road",
+    headline: "Testament\nDrives",
+    image: "https://images.unsplash.com/photo-1751819224947-01b829fbb4ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    num: 32,
+    section: "Legacy",
+    headline: "The\nLineage",
+    image: "https://images.unsplash.com/photo-1762028768745-f701dce6aa64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+];
 
 export function PdfReader() {
   const navigate = useNavigate();
@@ -23,7 +56,6 @@ export function PdfReader() {
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [containerWidth, setContainerWidth] = useState(340);
   const [showContents, setShowContents] = useState(false);
-  const [jumpValue, setJumpValue] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -160,8 +192,8 @@ export function PdfReader() {
             {/* Contents — jump to page */}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => { setJumpValue(String(pageIndex + 1)); setShowContents(true); }}
-              aria-label="Contents — jump to page"
+              onClick={() => setShowContents(true)}
+              aria-label="Table of contents"
               className="w-10 h-10 rounded-xl bg-[#141414] border border-[#2A2A2A] flex items-center justify-center"
             >
               <AlignJustify size={14} className="text-white/70" />
@@ -331,15 +363,22 @@ export function PdfReader() {
         )}
       </Document>
 
-      {/* ── PROGRESS BAR (normal mode) — slim fill, scales to any page count ── */}
+      {/* ── CHAPTER DOTS (normal mode) ── */}
       {pdfLoaded && !pdfError && !isExpanded && numPages > 0 && (
         <div className="shrink-0 flex justify-center px-8 pb-3 z-20">
-          <div className="w-full max-w-[240px] h-0.5 bg-white/12 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-white/80 rounded-full"
-              animate={{ width: `${((pageIndex + 1) / numPages) * 100}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
+          <div className="flex items-center gap-1.5">
+            {PDF_CHAPTERS.map((chapter, i) => {
+              const activeIdx = Math.max(0, PDF_CHAPTERS.filter(c => c.num <= pageIndex + 1).length - 1);
+              return (
+                <button
+                  key={i}
+                  onClick={() => jumpToPage(chapter.num)}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === activeIdx ? "w-5 h-1 bg-white" : "w-1 h-1 bg-white/20 hover:bg-white/40"
+                  }`}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -426,25 +465,36 @@ export function PdfReader() {
               >
                 −
               </motion.button>
-              {zoomLevel > 1 ? (
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setZoomLevel(1.0)}
-                  aria-label="Reset zoom to 100%"
-                  className="flex items-center gap-1 text-[11px] text-brand-orange tabular-nums px-1"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              {/* Zoom % — RefreshCw icon frames the percentage; tap resets to 100% */}
+              <motion.button
+                onClick={() => setZoomLevel(1.0)}
+                aria-label="Reset zoom to 100%"
+                className="relative flex items-center justify-center"
+                style={{ width: 44, height: 44 }}
+                whileTap={{ scale: 0.88 }}
+              >
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center"
+                  whileTap={{ rotate: 180 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 22 }}
                 >
-                  {Math.round(zoomLevel * 100)}%
-                  <RotateCcw size={11} strokeWidth={2} />
-                </motion.button>
-              ) : (
+                  <RefreshCw
+                    size={38}
+                    strokeWidth={1.1}
+                    style={{ color: zoomLevel !== 1.0 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)" }}
+                  />
+                </motion.div>
                 <span
-                  className="text-[11px] text-white/50 tabular-nums w-9 text-center"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  className="relative z-10 tabular-nums text-[10px]"
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontWeight: 700,
+                    color: zoomLevel !== 1.0 ? "#ffffff" : "rgba(255,255,255,0.4)",
+                  }}
                 >
                   {Math.round(zoomLevel * 100)}%
                 </span>
-              )}
+              </motion.button>
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={zoomIn}
@@ -494,78 +544,37 @@ export function PdfReader() {
                 </button>
               </div>
 
-              {/* Jump-to-page body */}
-              <div className="flex-1 px-5 pt-6 flex flex-col gap-6">
-                <div>
-                  <div className="text-[8px] text-white/40 uppercase tracking-[0.25em] mb-2">
-                    Current Page
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span
-                      className="text-[40px] font-bold text-white leading-none tabular-nums"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    >
-                      {pageNum}
-                    </span>
-                    <span className="text-[14px] text-white/30 tabular-nums">/ {numPages}</span>
-                  </div>
-                </div>
-
-                {/* Slider — live scrub */}
-                <input
-                  type="range"
-                  min={1}
-                  max={Math.max(1, numPages)}
-                  value={pageIndex + 1}
-                  onChange={(e) => {
-                    const n = parseInt(e.target.value, 10);
-                    setJumpValue(String(n));
-                    jumpToPage(n);
-                  }}
-                  aria-label="Scrub pages"
-                  className="w-full accent-white"
-                />
-
-                {/* Number entry + Go */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={numPages}
-                    value={jumpValue}
-                    onChange={(e) => setJumpValue(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") jumpToPage(parseInt(jumpValue, 10)); }}
-                    aria-label="Page number"
-                    placeholder="Page #"
-                    className="flex-1 min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-4 text-[13px] text-white placeholder:text-white/30 outline-none focus:border-white/40 tabular-nums"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  />
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => jumpToPage(parseInt(jumpValue, 10))}
-                    className="min-h-[40px] px-5 rounded-xl bg-white text-black text-[10px] uppercase tracking-[0.18em]"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-                  >
-                    Go
-                  </motion.button>
-                </div>
-
-                {/* Quick jumps */}
-                <div className="flex items-center gap-2">
+              {/* Chapters list */}
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+                {PDF_CHAPTERS.map((p, i) => (
                   <button
-                    onClick={() => jumpToPage(1)}
-                    className="flex-1 min-h-[40px] rounded-xl border border-[#2A2A2A] text-[9px] text-white/55 uppercase tracking-[0.18em]"
+                    key={i}
+                    onClick={() => {
+                      jumpToPage(p.num);
+                      setShowContents(false);
+                    }}
+                    className={`w-full flex items-center gap-4 px-5 py-4 border-b border-[#141414] text-left transition-colors duration-200 ${
+                      pageIndex + 1 === p.num ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
+                    }`}
                   >
-                    First Page
+                    <div className="w-10 h-12 rounded-lg overflow-hidden shrink-0 relative">
+                      <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[7px] text-white/30 uppercase tracking-widest mb-0.5">
+                        {p.section}
+                      </div>
+                      <div className={`text-[10px] font-bold uppercase tracking-wider leading-tight whitespace-pre-line ${
+                        pageIndex + 1 === p.num ? "text-white" : "text-white/60"
+                      }`}>
+                        {p.headline}
+                      </div>
+                    </div>
+                    <div className="text-[9px] text-white/20 tabular-nums shrink-0">
+                      {String(p.num).padStart(3, "0")}
+                    </div>
                   </button>
-                  <button
-                    onClick={() => jumpToPage(numPages)}
-                    className="flex-1 min-h-[40px] rounded-xl border border-[#2A2A2A] text-[9px] text-white/55 uppercase tracking-[0.18em]"
-                  >
-                    Last Page
-                  </button>
-                </div>
+                ))}
               </div>
             </motion.div>
           </>

@@ -268,7 +268,7 @@ export function MenuOverlay() {
                       <motion.button
                         onClick={() => {
                           closeMenu();
-                          openReader("resume");
+                          navigate("/reader");
                         }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}

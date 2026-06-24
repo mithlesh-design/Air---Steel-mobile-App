@@ -82,15 +82,26 @@ export function Reader() {
     }
   }, [pageIndex]);
 
-  const SPEED_SWIPE_VELOCITY = 0.4;
+  const LONG_SWIPE_THRESHOLD = 0.30; // fraction of screen width
   const touchStartX = useRef(0);
-  const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
 
-  const triggerSpeedSwipe = useCallback((dir: number) => {
+  const triggerSpeedSwipe = useCallback((dir: number, swipeDistance: number) => {
     if (isExpanded) return;
-    // Absolute fire times (ms): fast burst that decelerates naturally
-    const fireTimes = [70, 160, 280, 440, 650];
+    // Spinning-wheel physics: exponential deceleration
+    // Longer swipe → faster initial spin; all swipes decelerate by the same factor
+    const screenFraction = Math.min(swipeDistance / window.innerWidth, 1.0);
+    const initialInterval = Math.round(90 - screenFraction * 55); // 35–90ms
+    const decayFactor = 1.32;
+    const maxInterval = 400;
+    const fireTimes: number[] = [];
+    let elapsed = 0;
+    let interval = initialInterval;
+    while (interval < maxInterval) {
+      elapsed += interval;
+      fireTimes.push(Math.round(elapsed));
+      interval = Math.round(interval * decayFactor);
+    }
     let current = pageIndex;
     setIsSpeedSwiping(true);
     fireTimes.forEach((fireAt, i) => {
@@ -108,20 +119,19 @@ export function Reader() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-    touchStartTime.current = Date.now();
     speedSwipeActive.current = false;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaT = Date.now() - touchStartTime.current;
-    const velocity = Math.abs(deltaX) / deltaT;
-    if (Math.abs(deltaX) < 15) return;
+    const absDelta = Math.abs(deltaX);
+    if (absDelta < 15) return;
     e.preventDefault(); // suppress synthetic click on tap-zone buttons
     const dir = deltaX < 0 ? 1 : -1;
-    if (!isExpanded && velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
+    const isLongSwipe = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD;
+    if (!isExpanded && isLongSwipe && !speedSwipeActive.current) {
       speedSwipeActive.current = true;
-      triggerSpeedSwipe(dir);
+      triggerSpeedSwipe(dir, absDelta);
     } else {
       dir === 1 ? goNext() : goPrev();
     }
@@ -463,6 +473,8 @@ export function Reader() {
             exit={{ opacity: 0, y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 280 }}
             className="absolute inset-0 z-50 bg-[#080808] overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Full-screen page image */}
             <AnimatePresence mode="wait" custom={direction}>
@@ -517,12 +529,8 @@ export function Reader() {
 
               <div className="flex items-center gap-1.5">
                 {MAGAZINE_PAGES.map((_, i) => (
-                  <button
+                  <div
                     key={i}
-                    onClick={() => {
-                      setDirection(i > pageIndex ? 1 : -1);
-                      setPageIndex(i);
-                    }}
                     className={`rounded-full transition-all duration-300 ${
                       i === pageIndex
                         ? "w-5 h-1 bg-white"

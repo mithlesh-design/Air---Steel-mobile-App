@@ -148,7 +148,6 @@ const ARTICLE_IMAGES = [
   { num: "05", src: p5 },
 ];
 
-const SPEED_SWIPE_VELOCITY = 0.4;
 
 export function ReaderOverlay() {
   const { isReaderOpen, closeReader, currentArticleId, currentVolumeId, currentVolumeOwned, volumeInitialView } = useReader();
@@ -163,8 +162,6 @@ export function ReaderOverlay() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const touchStartX = useRef(0);
-  const touchStartTime = useRef(0);
-  const speedSwipeActive = useRef(false);
 
   useEffect(() => {
     if (isReaderOpen) {
@@ -181,44 +178,12 @@ export function ReaderOverlay() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-    touchStartTime.current = Date.now();
-    speedSwipeActive.current = false;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaT = Date.now() - touchStartTime.current;
-    const velocity = Math.abs(deltaX) / deltaT;
-
     if (Math.abs(deltaX) < 15) return;
-
-    const direction = deltaX < 0 ? 1 : -1;
-
-    // Articles advance one image at a time — speed-swipe (multi-jump) is volume-only.
-    if (!articleData && velocity > SPEED_SWIPE_VELOCITY && !speedSwipeActive.current) {
-      speedSwipeActive.current = true;
-      triggerSpeedSwipe(direction);
-    } else {
-      goToImg(imgIdx + direction);
-    }
-  };
-
-  const triggerSpeedSwipe = (direction: number) => {
-    const delays = [120, 120, 180, 260, 380];
-    let current = imgIdx;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-
-    delays.forEach((delay, i) => {
-      const accumulated = delays.slice(0, i).reduce((a, b) => a + b, 0);
-      const t = setTimeout(() => {
-        current = Math.max(0, Math.min(activeImages.length - 1, current + direction));
-        setImgIdx(current);
-        if (i === delays.length - 1) {
-          speedSwipeActive.current = false;
-        }
-      }, accumulated + delay);
-      timeouts.push(t);
-    });
+    goToImg(imgIdx + (deltaX < 0 ? 1 : -1));
   };
 
   const current = activeImages[imgIdx];
