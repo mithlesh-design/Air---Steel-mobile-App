@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Bookmark, Maximize2, Minimize2, AlignJustify, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useDoubleTapToggle } from "../hooks/useDoubleTapToggle";
 
 // Magazine spread images — editorial, high-quality, dark editorial photography
 const MAGAZINE_PAGES = [
@@ -85,6 +86,7 @@ export function Reader() {
   const LONG_SWIPE_THRESHOLD = 0.40; // fraction of screen width — must be a deliberate drag
   const FAST_FLICK_VELOCITY  = 0.45; // px/ms — above this it's a quick flip, not a drag
   const touchStartX    = useRef(0);
+  const touchStartY    = useRef(0);
   const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
 
@@ -119,19 +121,31 @@ export function Reader() {
     });
   }, [pageIndex, isExpanded]);
 
+  const { handleGesture, handleDoubleClick } = useDoubleTapToggle(
+    () => setIsExpanded((v) => !v),
+  );
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current   = e.touches[0].clientX;
+    touchStartY.current   = e.touches[0].clientY;
     touchStartTime.current = Date.now();
     speedSwipeActive.current = false;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     const deltaX   = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY   = e.changedTouches[0].clientY - touchStartY.current;
     const absDelta = Math.abs(deltaX);
+    const deltaT   = Date.now() - touchStartTime.current;
+
+    const { clientX, clientY } = e.changedTouches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (handleGesture({ deltaX, deltaY, deltaT, clientX, clientY, rect })) return;
+
     if (absDelta < 15) return;
     e.preventDefault(); // suppress synthetic click on tap-zone buttons
     const dir      = deltaX < 0 ? 1 : -1;
-    const velocity = absDelta / Math.max(Date.now() - touchStartTime.current, 1);
+    const velocity = absDelta / Math.max(deltaT, 1);
     // Speed swipe only for a slow deliberate drag — fast flicks always flip one page
     const isLongSlowDrag = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD
                         && velocity < FAST_FLICK_VELOCITY;
@@ -211,6 +225,7 @@ export function Reader() {
           style={{ maxWidth: 320, touchAction: "none" }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onDoubleClick={handleDoubleClick}
         >
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -481,6 +496,7 @@ export function Reader() {
             className="absolute inset-0 z-50 bg-[#080808] overflow-hidden"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            onDoubleClick={handleDoubleClick}
           >
             {/* Full-screen page image */}
             <AnimatePresence mode="wait" custom={direction}>

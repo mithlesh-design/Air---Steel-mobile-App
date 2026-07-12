@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(osascript -e 'tell application \"Simulator\" to activate' -e 'delay 0.5' -e 'tell application \"System Events\" to tell process \"Simulator\" to get {position, size} of window 1')",
+      "Bash(which idb *)",
+      "Read(//Users/shaktimishra/Library/Developer/Xcode/UserData/**)",
+      "Bash(break)",
+      "Bash(node -e \"console.log\\(require\\('react-native-pdf/package.json'\\).version\\)\")",
+      "Bash(cp '/Volumes/Kunal/Air & Steel Mobile App/mobile/app/pdf-reader.tsx' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(sed -i '' 's/const \\\\[isExpanded, setIsExpanded\\\\] = useState\\(false\\);/const [isExpanded, setIsExpanded] = useState\\(true\\);/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(sed -i '' 's/const \\\\[zoomLevel, setZoomLevel\\\\] = useState\\(1.0\\);/const [zoomLevel, setZoomLevel] = useState\\(2.0\\);/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(sed -i '' 's/const \\\\[isExpanded, setIsExpanded\\\\] = useState\\(true\\);/const [isExpanded, setIsExpanded] = useState\\(false\\);/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(sed -i '' 's/const \\\\[zoomLevel, setZoomLevel\\\\] = useState\\(2.0\\);/const [zoomLevel, setZoomLevel] = useState\\(1.0\\);/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(grep -n \"isExpanded, setIsExpanded\\\\|zoomLevel, setZoomLevel\\\\|scrollEnabled={zoomLevel > 1}\\\\|fullScrollH\\\\|enabled\\(zoomLevel === 1\\)\" \"/Volumes/Kunal/Air & Steel Mobile App/mobile/app/pdf-reader.tsx\")",
+      "Bash(cp \"/Volumes/Kunal/Air & Steel Mobile App/mobile/app/pdf-reader.tsx\" /private/tmp/airsteel-build/app/pdf-reader.tsx && echo \"synced to running copy\"; echo \"=== confirm copy min-zoom + defaults ===\"; grep -n \"Math.max\\(1.0\\\\|zoomLevel <= 1\\\\|useState\\(false\\).*isExp\\\\|isExpanded, setIsExpanded\\\\|zoomLevel, setZoomLevel\" /private/tmp/airsteel-build/app/pdf-reader.tsx | head)",
+      "Bash(node /private/tmp/claude-501/-Volumes-Kunal-Air---Steel-Mobile-App/fea9b569-5c98-43e3-9b2d-771b4fc3d877/scratchpad/gate.mjs)",
+      "Bash(node /private/tmp/claude-501/-Volumes-Kunal-Air---Steel-Mobile-App/fea9b569-5c98-43e3-9b2d-771b4fc3d877/scratchpad/parity.mjs)",
+      "Bash(cp \"/Volumes/Kunal/Air & Steel Mobile App/mobile/app/pdf-reader.tsx\" /private/tmp/airsteel-build/app/pdf-reader.tsx && cp \"/Volumes/Kunal/Air & Steel Mobile App/mobile/src/hooks/useAutoHideChrome.ts\" /private/tmp/airsteel-build/src/hooks/useAutoHideChrome.ts && echo \"synced final mobile to running copy\"; echo \"=== confirm copy defaults clean ===\"; grep -n \"useState\\(false\\).*isExpanded\\\\|isExpanded, setIsExpanded\\\\|useState\\(1.0\\)\\\\|useAutoHideChrome\\(isExpanded\\)\" /private/tmp/airsteel-build/app/pdf-reader.tsx | head)",
+      "Bash(node -e \"console.log\\(require\\('/Volumes/Kunal/Air & Steel Mobile App/mobile/app.json'\\).expo.ios\\)\")",
+      "Bash(sips -g hasAlpha -g pixelWidth \"/Volumes/Kunal/Air & Steel Mobile App/mobile/assets/icon-ios.png\")",
+      "Bash(node -e 'console.log\\(require\\('\\\\''/private/tmp/airsteel-build/app.json'\\\\''\\).expo.ios\\)')",
+      "Bash(sips -g hasAlpha -g pixelWidth -g pixelHeight /private/tmp/airsteel-build/assets/icon-ios.png)",
+      "Bash(lsof -iTCP:8081 -sTCP:LISTEN -n)",
+      "Bash(sed -i '' 's/const \\\\[zoomLevel, setZoomLevel\\\\] = useState\\(1.0\\);/const [zoomLevel, setZoomLevel] = useState\\(1.5\\);/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(sed -i '' 's/useAutoHideChrome\\(isExpanded\\)/useAutoHideChrome\\(isExpanded, 60000\\)/' /private/tmp/airsteel-build/app/pdf-reader.tsx)",
+      "Bash(git rev-list *)",
+      "Bash(git check-ignore *)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp/airsteel-build/app",
+      "/private/tmp/airsteel-build/src/hooks"
+    ]
+  }
+}

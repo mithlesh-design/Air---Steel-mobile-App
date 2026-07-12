@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TopBar } from "../components/layout/TopBar";
-import { ChevronDown, Plus, Check, Mail, ArrowRight } from "lucide-react";
+import { ChevronDown, Plus, Check, ArrowRight } from "lucide-react";
 import { useReader } from "../context/ReaderContext";
 import { useCart } from "../context/CartContext";
 import { isVolumeOwned } from "../data/ownership";
@@ -73,7 +73,6 @@ export function Archives() {
   const location = useLocation();
   const [openGenerations, setOpenGenerations] = useState<Set<string>>(new Set(["gen1"]));
   const [highlightedVol, setHighlightedVol] = useState<string | null>(null);
-  const [notifyEmail, setNotifyEmail] = useState("");
   const [notified, setNotified] = useState(false);
   const volRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -266,36 +265,16 @@ export function Archives() {
                     transition={{ duration: 0.25, ease: "easeOut" }}
                     onSubmit={(e) => {
                       e.preventDefault();
-                      if (notifyEmail.trim()) setNotified(true);
+                      setNotified(true);
                     }}
                     className="flex flex-col gap-2.5"
                   >
-                    {/* Email input with leading icon */}
-                    <div className="relative">
-                      <Mail
-                        size={14}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
-                      />
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        aria-label="Email address"
-                        value={notifyEmail}
-                        onChange={(e) => setNotifyEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className="w-full min-h-[48px] rounded-full bg-white/[0.18] backdrop-blur-md border border-white/35 pl-11 pr-5 text-[13px] text-white placeholder:text-white/65 outline-none transition-colors duration-200 focus:border-brand-orange/60 focus:bg-white/[0.22]"
-                        style={{ fontFamily: "'Inter', sans-serif" }}
-                      />
-                    </div>
-
                     {/* Notify Me */}
                     <motion.button
                       type="submit"
-                      disabled={!notifyEmail.trim()}
-                      whileTap={notifyEmail.trim() ? { scale: 0.98 } : {}}
+                      whileTap={{ scale: 0.98 }}
                       aria-label="Notify me when Volume 1.1 launches"
-                      className="w-full min-h-[48px] rounded-full flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.22em] transition-all duration-200 disabled:opacity-60"
+                      className="w-full min-h-[48px] rounded-full flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.22em] transition-all duration-200"
                       style={{
                         fontFamily: "'Space Grotesk', sans-serif",
                         fontWeight: 600,

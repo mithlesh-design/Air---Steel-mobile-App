@@ -5,12 +5,18 @@ import { useNavigate } from "react-router";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { useDoubleTapToggle } from "../hooks/useDoubleTapToggle";
+import { useAutoHideChrome } from "../hooks/useAutoHideChrome";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 const PDF_URL = "/vol-1-genesis.pdf";
 const LONG_SWIPE_THRESHOLD = 0.38;
 const FAST_FLICK_VELOCITY  = 0.50;
+const FULLSCREEN_SWIPE_MIN_PX = 40;
+const FULLSCREEN_AXIS_RATIO   = 1.5;
+
+const swipeDir = (deltaX: number) => (deltaX < 0 ? 1 : -1);
 
 const PDF_CHAPTERS = [
   {
@@ -62,8 +68,14 @@ export function PdfReader() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const touchStartTime = useRef(0);
   const speedSwipeActive = useRef(false);
+  const speedSwipeTimers = useRef<number[]>([]);
+  const swipedRef = useRef(false);
+  const pinchingRef = useRef(false);
+  const pinchStartDist = useRef(0);
+  const pinchStartZoom = useRef(1);
 
   // Track container width so Page fills it correctly in both normal + expanded modes
   useEffect(() => {
@@ -95,7 +107,19 @@ export function PdfReader() {
     if (pageIndex > 0) { setDirection(-1); setPageIndex((i) => i - 1); }
   }, [pageIndex]);
 
+  const cancelSpeedSwipe = useCallback(() => {
+    speedSwipeTimers.current.forEach(clearTimeout);
+    speedSwipeTimers.current = [];
+    speedSwipeActive.current = false;
+    setIsSpeedSwiping(false);
+  }, []);
+
+  useEffect(() => cancelSpeedSwipe, [cancelSpeedSwipe]);
+
   const triggerSpeedSwipe = useCallback((dir: number, swipeDistance: number) => {
+    if (isExpanded) return;
+    cancelSpeedSwipe();
+    speedSwipeActive.current = true;
     setIsSpeedSwiping(true);
     setDirection(dir);
 
@@ -113,43 +137,138 @@ export function PdfReader() {
     }
 
     let current = pageIndex;
-    fireTimes.forEach((t, i) => {
-      setTimeout(() => {
+    speedSwipeTimers.current = fireTimes.map((t, i) =>
+      window.setTimeout(() => {
         current = Math.max(0, Math.min(numPages - 1, current + dir));
         setPageIndex(current);
-        if (i === fireTimes.length - 1) { speedSwipeActive.current = false; setIsSpeedSwiping(false); }
-      }, t);
-    });
-  }, [pageIndex, numPages]);
+        if (i === fireTimes.length - 1) cancelSpeedSwipe();
+      }, t)
+    );
+  }, [pageIndex, numPages, isExpanded, cancelSpeedSwipe]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (pinchingRef.current || e.touches.length > 1) return;
     if (zoomLevel > 1) return;
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
     touchStartTime.current = Date.now();
-    speedSwipeActive.current = false;
+    swipedRef.current = false;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (pinchingRef.current) return;
     if (zoomLevel > 1) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
     const absDelta = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
     const deltaT = Date.now() - touchStartTime.current;
     const velocity = absDelta / Math.max(deltaT, 1);
+
+    const { clientX, clientY } = e.changedTouches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const tap = handleGesture({ deltaX, deltaY, deltaT, clientX, clientY, rect });
+    if (tap) {
+      if (tap === "tap" && isExpanded) showChrome();
+      return;
+    }
+
+    if (isExpanded) {
+      // Fullscreen scrolls vertically — only commit to a page turn on a
+      // deliberate, horizontal-dominant drag, and never more than one page.
+      if (absDelta < FULLSCREEN_SWIPE_MIN_PX) return;
+      if (absDelta < absDeltaY * FULLSCREEN_AXIS_RATIO) return;
+      swipedRef.current = true;
+      swipeDir(deltaX) === 1 ? goNext() : goPrev();
+      return;
+    }
+
     if (absDelta < 15) return;
-    const dir = deltaX < 0 ? 1 : -1;
+    swipedRef.current = true;
     const isLongSlowDrag = absDelta > window.innerWidth * LONG_SWIPE_THRESHOLD
                         && velocity < FAST_FLICK_VELOCITY;
     if (isLongSlowDrag && !speedSwipeActive.current) {
-      speedSwipeActive.current = true;
-      triggerSpeedSwipe(dir, absDelta);
+      triggerSpeedSwipe(swipeDir(deltaX), absDelta);
     } else {
-      dir === 1 ? goNext() : goPrev();
+      swipeDir(deltaX) === 1 ? goNext() : goPrev();
     }
   };
 
-  const collapse = () => { setIsExpanded(false); setZoomLevel(1.0); };
-  const zoomIn  = () => setZoomLevel(z => parseFloat(Math.min(3.0, z + 0.25).toFixed(2)));
-  const zoomOut = () => setZoomLevel(z => parseFloat(Math.max(0.75, z - 0.25).toFixed(2)));
+  // A swipe that ends over a tap zone would otherwise fire a synthetic click too.
+  const handleTapZone = (fn: () => void) => () => {
+    if (swipedRef.current) { swipedRef.current = false; return; }
+    fn();
+  };
+
+  const collapse = () => { cancelSpeedSwipe(); setIsExpanded(false); setZoomLevel(1.0); };
+  const expand   = () => { cancelSpeedSwipe(); setIsExpanded(true); };
+
+  const { handleGesture, handleDoubleClick } = useDoubleTapToggle(
+    () => (isExpanded ? collapse() : expand()),
+    zoomLevel === 1,
+  );
+
+  const { visible: chromeVisible, show: showChrome } = useAutoHideChrome(isExpanded);
+
+  // Entering fullscreen, turning a page and changing zoom are all just state
+  // changes, so one effect covers three of the four reveal triggers.
+  useEffect(() => {
+    if (isExpanded) showChrome();
+  }, [isExpanded, pageIndex, zoomLevel, showChrome]);
+
+  // Pinch to zoom (fullscreen only) — trackpad pinch arrives as ctrl+wheel, touch
+  // pinch as a 2-finger gesture. Native non-passive listeners so preventDefault
+  // works (React's synthetic wheel/touch are passive and can't block browser zoom).
+  useEffect(() => {
+    if (!isExpanded) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const clampZoom = (z: number) => parseFloat(Math.min(3, Math.max(1, z)).toFixed(2));
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setZoomLevel((z) => clampZoom(z - e.deltaY * 0.01));
+      showChrome();
+    };
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      pinchingRef.current = true;
+      pinchStartDist.current = dist(e.touches);
+      pinchStartZoom.current = zoomLevel;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pinchingRef.current || e.touches.length !== 2) return;
+      e.preventDefault();
+      setZoomLevel(clampZoom(pinchStartZoom.current * (dist(e.touches) / pinchStartDist.current)));
+      showChrome();
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      // Defer the reset past React's (passive, delegated) touchend so the
+      // single-touch swipe/tap handlers still see the pinch flag and bail.
+      if (pinchingRef.current && e.touches.length === 0) {
+        setTimeout(() => { pinchingRef.current = false; }, 0);
+      }
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [isExpanded, zoomLevel, showChrome]);
+
+  // showChrome() explicitly: a no-op press (reset at 100%, + at max zoom) leaves
+  // zoomLevel unchanged, so the reveal effect would not re-arm the hide timer.
+  const zoomIn  = () => { showChrome(); setZoomLevel(z => parseFloat(Math.min(3.0, z + 0.25).toFixed(2))); };
+  const zoomOut = () => { showChrome(); setZoomLevel(z => parseFloat(Math.max(1.0, z - 0.25).toFixed(2))); };
+  const zoomReset = () => { showChrome(); setZoomLevel(1.0); };
 
   const pageNum = String(pageIndex + 1).padStart(3, "0");
 
@@ -248,23 +367,25 @@ export function PdfReader() {
             ref={containerRef}
             className="absolute inset-0 z-50 bg-[#080808] overflow-auto flex items-start justify-center"
             style={{
-              touchAction: zoomLevel > 1 ? "auto" : "pan-y",
+              touchAction: zoomLevel > 1 ? "pan-x pan-y" : "pan-y",
               paddingTop: 80,
               paddingBottom: 96,
             }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            onDoubleClick={handleDoubleClick}
+            onClick={showChrome}
           >
             {/* Invisible tap zones — only at normal zoom */}
             {zoomLevel === 1 && (
               <>
                 <button
-                  onClick={goPrev}
+                  onClick={handleTapZone(goPrev)}
                   className="absolute left-0 top-0 h-full w-1/4 z-10 opacity-0"
                   aria-label="Previous page"
                 />
                 <button
-                  onClick={goNext}
+                  onClick={handleTapZone(goNext)}
                   className="absolute right-0 top-0 h-full w-1/4 z-10 opacity-0"
                   aria-label="Next page"
                 />
@@ -295,6 +416,7 @@ export function PdfReader() {
               style={{ touchAction: "none" }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
+              onDoubleClick={handleDoubleClick}
             >
               <AnimatePresence custom={direction}>
                 <motion.div
@@ -394,7 +516,7 @@ export function PdfReader() {
             {/* Expand */}
             <motion.button
               whileTap={{ scale: 0.88 }}
-              onClick={() => setIsExpanded(true)}
+              onClick={expand}
               className="px-4 py-3.5 flex items-center justify-center"
             >
               <Maximize2 size={16} className="text-white/40" />
@@ -406,9 +528,14 @@ export function PdfReader() {
       {/* ── EXPANDED CONTROLS (overlaid, z-index above the page container) ── */}
       {isExpanded && (
         <>
-          {/* Top controls */}
-          <div className="absolute top-0 left-0 right-0 z-[60] flex items-start justify-between px-5 pt-12 pointer-events-none">
-            <div className="pointer-events-auto bg-black/50 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5">
+          {/* Top controls — pointer-events must be dropped on the CHILDREN, since
+              pointer-events:none on this parent does not override their :auto. */}
+          <motion.div
+            animate={{ opacity: chromeVisible ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-0 left-0 right-0 z-[60] flex items-start justify-between px-5 pt-12 pointer-events-none"
+          >
+            <div className={`${chromeVisible ? "pointer-events-auto" : "pointer-events-none"} bg-black/50 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5`}>
               <span
                 className="text-[11px] text-white/60 tabular-nums"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
@@ -420,30 +547,34 @@ export function PdfReader() {
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={collapse}
-              className="pointer-events-auto w-9 h-9 rounded-full media-control bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center"
+              className={`${chromeVisible ? "pointer-events-auto" : "pointer-events-none"} w-9 h-9 rounded-full media-control bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center`}
             >
               <Minimize2 size={14} className="text-white/70" />
             </motion.button>
-          </div>
+          </motion.div>
 
           {/* Bottom controls — zoom only; page nav is by tapping the reader's left/right edges */}
-          <div
+          <motion.div
+            animate={{ opacity: chromeVisible ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
             className="absolute bottom-0 left-0 right-0 z-[60] pb-10 px-5 pt-4 flex items-center justify-center"
-            style={{ background: "linear-gradient(to top, rgba(8,8,8,0.95) 60%, transparent)" }}
+            style={{
+              background: "linear-gradient(to top, rgba(8,8,8,0.95) 60%, transparent)",
+              pointerEvents: chromeVisible ? "auto" : "none",
+            }}
           >
-            {/* Zoom controls */}
+            {/* Zoom controls — RefreshCw icon frames the percentage; tap resets to 100% */}
             <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md rounded-full px-5 py-2.5 border border-white/10">
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={zoomOut}
-                disabled={zoomLevel <= 0.75}
+                disabled={zoomLevel <= 1}
                 className="w-6 h-6 flex items-center justify-center text-white/70 disabled:opacity-25 text-xl font-light leading-none"
               >
                 −
               </motion.button>
-              {/* Zoom % — RefreshCw icon frames the percentage; tap resets to 100% */}
               <motion.button
-                onClick={() => setZoomLevel(1.0)}
+                onClick={zoomReset}
                 aria-label="Reset zoom to 100%"
                 className="relative flex items-center justify-center"
                 style={{ width: 44, height: 44 }}
@@ -480,7 +611,7 @@ export function PdfReader() {
                 +
               </motion.button>
             </div>
-          </div>
+          </motion.div>
         </>
       )}
 
